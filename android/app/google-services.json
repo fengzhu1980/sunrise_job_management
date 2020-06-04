@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "580456799628",
+    "firebase_url": "https://sunrise-job.firebaseio.com",
+    "project_id": "sunrise-job",
+    "storage_bucket": "sunrise-job.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:580456799628:android:94b0090a6f796283da0aa9",
+        "android_client_info": {
+          "package_name": "com.example.sunrise_job_management"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "580456799628-qjnq0d5r8jqcth6d1bmttae260ifirrp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFlZIEKRnias4IOLO310vJONrEejC0rtw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "580456799628-qjnq0d5r8jqcth6d1bmttae260ifirrp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

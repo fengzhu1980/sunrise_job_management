@@ -165,6 +165,7 @@ class _AuthFormState extends State<AuthForm>
             child: Column(
               children: <Widget>[
                 TextFormField(
+                  key: ValueKey('email'),
                   decoration: InputDecoration(labelText: 'Email'),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
@@ -177,6 +178,7 @@ class _AuthFormState extends State<AuthForm>
                 ),
                 if (_authMode == AuthMode.Signup)
                   TextFormField(
+                    key: ValueKey('username'),
                     decoration: InputDecoration(labelText: 'Username'),
                     autocorrect: true,
                     textCapitalization: TextCapitalization.words,
@@ -189,6 +191,7 @@ class _AuthFormState extends State<AuthForm>
                     onSaved: (value) => _username = value,
                   ),
                 TextFormField(
+                  key: ValueKey('password'),
                   decoration: InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   controller: _passwordController,

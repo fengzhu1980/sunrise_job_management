@@ -1,5 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'package:sunrise_job_management/pages/auth_page.dart';
+import 'package:sunrise_job_management/pages/jobs_overview_page.dart';
+import 'package:sunrise_job_management/pages/splash_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,7 +22,16 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: AuthPage(),
+      home: StreamBuilder(stream: FirebaseAuth.instance.onAuthStateChanged, builder: (ctx, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
+          return SplashPage();
+        }
+        if (userSnapshot.hasData) {
+          return JobsOverviewPage();
+        } else {
+          return AuthPage();
+        }
+      },),
     );
   }
 }
