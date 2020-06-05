@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +8,8 @@ import 'package:sunrise_job_management/models/user.dart';
 import 'package:sunrise_job_management/widgets/auth/auth_form.dart';
 
 class AuthPage extends StatefulWidget {
+  static const routeName = '/';
+
   @override
   _AuthPageState createState() => _AuthPageState();
 }
@@ -46,7 +46,7 @@ class _AuthPageState extends State<AuthPage> {
         // Add user
         user = User(
           id: authResult.user.uid,
-          createdAt: DateTime.now().toUtc(),
+          createdAt: DateTime.now().toUtc().toString(),
           email: email,
           isActive: true,
           username: username,
@@ -58,6 +58,15 @@ class _AuthPageState extends State<AuthPage> {
             .document(authResult.user.uid)
             .setData(user.toMap());
       }
+
+      // Save user info locally
+      // final prefs = await SharedPreferences.getInstance();
+      // final userData = json.encode({
+      //   'userId': user.id,
+      //   'username': user.username,
+      //   'roles': user.roles
+      // });
+      // prefs.setString('userData', userData);
     } on PlatformException catch (err) {
       var message = 'An error occurred, please check your credentials!';
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class User {
   final String id;
   final String avatar;
-  final DateTime createdAt;
+  final String createdAt;
   final String email;
   final bool isActive;
   final String username;
