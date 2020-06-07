@@ -12,7 +12,11 @@ class Job {
   String endTime;
   String createdAt;
   List tasks;
+  String customerName;
+  String customerEmail;
+  String customerPhone;
   String customerId;
+  String userId;
 
   Job({
     @required this.code,
@@ -25,7 +29,11 @@ class Job {
     this.endTime,
     @required this.createdAt,
     @required this.tasks,
+    @required this.customerName,
+    @required this.customerEmail,
+    @required this.customerPhone,
     this.customerId,
+    this.userId,
   });
 
   Map<String, dynamic> toMap() {
@@ -40,7 +48,11 @@ class Job {
       'endTime': endTime,
       'createdAt': createdAt,
       'tasks': tasks,
+      'customerName': customerName,
+      'customerEmail': customerEmail,
+      'customerPhone': customerPhone,
       'customerId': customerId,
+      'userId': userId,
     };
   }
 }
