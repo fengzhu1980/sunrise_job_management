@@ -1,42 +1,43 @@
 import 'package:flutter/material.dart';
 
 class Job {
-  final String id;
-  final String code;
-  final String title;
-  final String address;
+  String id;
+  String code;
+  String title;
+  String address;
   String stage;
-  final String serviceDate;
-  final String startDateTime;
-  final String endDateTime;
-  final String createdAt;
-  final List tasks;
-  final String customerId;
+  String startDate;
+  String endDate;
+  String startTime;
+  String endTime;
+  String createdAt;
+  List tasks;
+  String customerId;
 
   Job({
-    @required this.id,
     @required this.code,
     @required this.title,
     @required this.address,
     this.stage = 'upcoming',
-    @required this.serviceDate,
-    this.startDateTime,
-    this.endDateTime,
+    @required this.startDate,
+    @required this.endDate,
+    this.startTime,
+    this.endTime,
     @required this.createdAt,
     @required this.tasks,
-    @required this.customerId,
+    this.customerId,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'code': code,
       'title': title,
       'address': address,
       'stage': stage,
-      'serviceDate': serviceDate,
-      'startDateTime': startDateTime,
-      'endDateTime': endDateTime,
+      'startDate': startDate,
+      'endDate': endDate,
+      'startTime': startTime,
+      'endTime': endTime,
       'createdAt': createdAt,
       'tasks': tasks,
       'customerId': customerId,
