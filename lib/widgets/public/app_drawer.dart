@@ -10,9 +10,9 @@ class AppDrawer extends StatelessWidget {
   final dynamic userData;
   @override
   Widget build(BuildContext context) {
-    print('aaaaa');
-    print(userData);
-    print(userData['email']);
+    // print('aaaaa');
+    // print(userData);
+    // print(userData['email']);
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
