@@ -53,6 +53,10 @@ class _EditJobPageState extends State<EditJobPage> {
     if (widget.jobData != null) {
       _appBarTitle = 'Edit job';
       _editJob = Job.fromSnapshot(widget.jobData);
+      print('startDate: ${_editJob.startDate}');
+      print('startTime: ${_editJob.startTime}');
+      print('endDate: ${_editJob.endDate}');
+      print('endTime: ${_editJob.endTime}');
     }
     _jobCode = _getJobCode();
   }
@@ -86,15 +90,16 @@ class _EditJobPageState extends State<EditJobPage> {
       // );
 
       var oprationType = 'Add';
+      var _isSuccess = false;
       if (_editJob.id == null) {
         // Add job
-        _editJob.createdAt = DateTime.now().toUtc().toString();
-        print('startTime: ${_editJob.startTime}');
-        print(_editJob.startTime.format(context));
-        print(
-            'parse startTime1: ${DateFormat.jm().format(DateTime(_editJob.startTime.hour, _editJob.startTime.minute))}');
-        print(
-            'parse startTime2: ${DateFormat.jm().parse(_editJob.startTime.toString()).toString()}');
+        _editJob.createdAt = DateTime.now().toUtc();
+        // print('startTime: ${_editJob.startTime}');
+        // print(_editJob.startTime.format(context));
+        // print(
+            // 'parse startTime1: ${DateFormat.jm().format(DateTime(_editJob.startTime.hour, _editJob.startTime.minute))}');
+        // print(
+            // 'parse startTime2: ${DateFormat.jm().parse(_editJob.startTime.toString()).toString()}');
         try {
           DocumentReference jobRef =
               Firestore.instance.collection('jobs').document();
@@ -106,6 +111,7 @@ class _EditJobPageState extends State<EditJobPage> {
               .collection('job_codes')
               .document()
               .setData({'code': _editJob.code});
+          _isSuccess = true;
         } catch (err) {
           await showDialog(
             context: context,
@@ -123,34 +129,38 @@ class _EditJobPageState extends State<EditJobPage> {
             ),
           );
         }
+        setState(() {
+          _isLoading = false;
+        });
       } else {
         // Update job
         oprationType = 'Update';
-        _editJob.modifiedAt = DateTime.now().toUtc().toString();
+        _editJob.modifiedAt = DateTime.now().toUtc();
 
         await Firestore.instance
             .collection('jobs')
             .document(_editJob.id)
             .updateData(_editJob.toMap());
+        _isSuccess = true;
+        
+        setState(() {
+          _isLoading = false;
+        });
       }
 
-      scaffoldKey.currentState.showSnackBar(
-        SnackBar(
-          content: Text('$oprationType job successed.'),
-          backgroundColor: Colors.green,
-          duration: Duration(milliseconds: 1500),
-        ),
-      );
-
-      setState(() {
-        _isLoading = true;
-      });
+      if (_isSuccess) {
+        scaffoldKey.currentState.showSnackBar(
+          SnackBar(
+            content: Text('$oprationType job successed.'),
+            backgroundColor: Colors.green,
+            duration: Duration(milliseconds: 1500),
+          ),
+        );
+        // TODO
+        // refresh job managment page
+      }
       // final format = DateFormat.jm();
       // final time = TimeOfDay.fromDateTime(format.parse(jobData.startTime));
-
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -199,6 +209,7 @@ class _EditJobPageState extends State<EditJobPage> {
               key: _jobFormKey,
               child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.only(bottom: 14.0),
@@ -249,6 +260,9 @@ class _EditJobPageState extends State<EditJobPage> {
                       minLines: 1,
                       maxLines: 2,
                       validator: _generalValidator,
+                      onSaved: (value) {
+                        _editJob.title = value;
+                      },
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -259,6 +273,9 @@ class _EditJobPageState extends State<EditJobPage> {
                       maxLines: 2,
                       initialValue: _editJob.address,
                       validator: _generalValidator,
+                      onSaved: (value) {
+                        _editJob.address = value;
+                      },
                     ),
                     StreamBuilder(
                       stream:
@@ -399,6 +416,9 @@ class _EditJobPageState extends State<EditJobPage> {
                       textCapitalization: TextCapitalization.words,
                       initialValue: _editJob.customerName,
                       validator: _generalValidator,
+                      onSaved: (value) {
+                        _editJob.customerName = value;
+                      },
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -409,6 +429,9 @@ class _EditJobPageState extends State<EditJobPage> {
                       minLines: 1,
                       maxLines: 2,
                       validator: _emailValidator,
+                      onSaved: (value) {
+                        _editJob.customerEmail = value;
+                      },
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -417,6 +440,9 @@ class _EditJobPageState extends State<EditJobPage> {
                       initialValue: _editJob.customerPhone,
                       keyboardType: TextInputType.phone,
                       validator: _generalValidator,
+                      onSaved: (value) {
+                        _editJob.customerPhone = value;
+                      },
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -477,16 +503,18 @@ class _EditJobPageState extends State<EditJobPage> {
                         child: CircularProgressIndicator(),
                       ),
                     if (!_isLoading)
-                      RaisedButton(
-                        child: Text('Save Job'),
-                        onPressed: _trySubmit,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                      Center(
+                        child: RaisedButton(
+                          child: Text('Save Job'),
+                          onPressed: _trySubmit,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          color: Theme.of(context).primaryColor,
+                          textColor:
+                              Theme.of(context).primaryTextTheme.button.color,
+                          elevation: 3,
                         ),
-                        color: Theme.of(context).primaryColor,
-                        textColor:
-                            Theme.of(context).primaryTextTheme.button.color,
-                        elevation: 3,
                       ),
                   ],
                 ),

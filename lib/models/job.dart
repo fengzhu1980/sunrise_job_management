@@ -13,8 +13,16 @@ class Job {
   DateTime endDate;
   TimeOfDay startTime;
   TimeOfDay endTime;
-  String createdAt;
-  String modifiedAt;
+  DateTime startDateReal;
+  DateTime endDateReal;
+  TimeOfDay startTimeReal;
+  TimeOfDay endTimeReal;
+  // int startHour;
+  // int startMin;
+  // int endHour;
+  // int endMin;
+  DateTime createdAt;
+  DateTime modifiedAt;
   List tasks;
   String customerName;
   String customerEmail;
@@ -31,8 +39,16 @@ class Job {
     this.stage,
     @required this.startDate,
     @required this.endDate,
+    // this.startHour,
+    // this.startMin,
+    // this.endHour,
+    // this.endMin,
     this.startTime,
     this.endTime,
+    this.startDateReal,
+    this.endDateReal,
+    this.startTimeReal,
+    this.endTimeReal,
     this.createdAt,
     this.modifiedAt,
     @required this.tasks,
@@ -51,10 +67,24 @@ class Job {
       'title': title,
       'address': address,
       'stage': stage,
-      'startDate': startDate.toString(),
-      'endDate': endDate.toString(),
-      'startTime': DateFormat.jm().parse(startTime.toString()).toString(),
-      'endTime': DateFormat.jm().parse(endTime.toString()).toString(),
+      'startDate': startDate.toUtc(),
+      'startHour': startTime.hour,
+      'startMin': startTime.minute,
+      // 'startTime': DateTime(startDate.toUtc().year, startDate.month, startTime.hour, startTime.minute).toString(),
+      'endDate': endDate.toUtc(),
+      'endHour': endTime.hour,
+      'endMin': endTime.minute,
+      'startDateReal': startDateReal?.toUtc(),
+      'endDateReal': endDateReal?.toUtc(),
+      'startHourReal': startTimeReal?.hour,
+      'startMinReal': startTimeReal?.minute,
+      'endHourReal': endTimeReal?.hour,
+      'endMinReal': endTimeReal?.minute,
+      // 'endTime': DateTime(endDate.year, endDate.month, endTime.hour, endTime.minute).toString(),
+      // 'startTime': DateFormat.jm().parse(startTime.toString()).toString(),
+      // 'startTime': DateFormat.jm().parse(startTime.toString()).toString(),
+      // 'endTime': DateFormat.jm().parse(endTime.toString()).toString(),
+      // 'endTime': DateFormat.jm().parse(endTime.toString()).toString(),
       'createdAt': createdAt,
       'modifiedAt': modifiedAt,
       'tasks': tasks,
@@ -68,18 +98,22 @@ class Job {
   }
 
   static Job fromSnapshot(DocumentSnapshot snapshot) {
-    return Job(
+    final returnJob = Job(
       id: snapshot.documentID,
       code: snapshot['code'],
       title: snapshot['title'],
       address: snapshot['address'],
       stage: snapshot['stage'],
-      startDate: DateTime.parse(snapshot['startDate']),
-      endDate: DateTime.parse(snapshot['endDate']),
-      startTime: TimeOfDay.fromDateTime(DateFormat.jm().parse(snapshot['startTime'])),
-      endTime: TimeOfDay.fromDateTime(DateFormat.jm().parse(snapshot['endTime'])),
-      createdAt: snapshot['createdAt'],
-      modifiedAt: snapshot['modifiedAt'],
+      startDate: DateTime.tryParse(snapshot['startDate'].toDate().toString()),
+      endDate: DateTime.tryParse(snapshot['endDate'].toDate().toString()),
+      startTime: TimeOfDay(hour: snapshot['startHour'], minute: snapshot['startMin']),
+      endTime: TimeOfDay(hour: snapshot['endHour'], minute: snapshot['endMin']),
+      // startDateReal: DateTime.tryParse(snapshot['startDateReal']?.toString()),
+      // endDateReal: DateTime.tryParse(snapshot['endDateReal']?.toString()),
+      // startTimeReal: TimeOfDay(hour: snapshot['startHourReal'], minute: snapshot['startMinReal']),
+      // endTimeReal: TimeOfDay(hour: snapshot['endHourReal'], minute: snapshot['endMinReal']),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toString()),
+      // modifiedAt: DateTime.tryParse(snapshot['modifiedAt']?.toString()),
       tasks: List.from(snapshot['tasks']),
       customerName: snapshot['customerName'],
       customerEmail: snapshot['customerEmail'],
@@ -88,5 +122,21 @@ class Job {
       userId: snapshot['userId'],
       isDeleted: snapshot['isDeleted'],
     );
+    if (snapshot['startDateReal'] != null) {
+      returnJob.startDateReal = DateTime.tryParse(snapshot['startDateReal'].toDate().toString());
+    }
+    if (snapshot['endDateReal'] != null) {
+      returnJob.endDateReal = DateTime.tryParse(snapshot['endDateReal'].toDate().toString());
+    }
+    if ((snapshot['startHourReal'] != null) && (snapshot['startMinReal'] != null)) {
+      returnJob.startTimeReal = TimeOfDay(hour: snapshot['startHourReal'], minute: snapshot['startMinReal']);
+    }
+    if ((snapshot['endHourReal'] != null) && (snapshot['endMinReal'] != null)) {
+      returnJob.startTimeReal = TimeOfDay(hour: snapshot['endHourReal'], minute: snapshot['endMinReal']);
+    }
+    if (snapshot['modifiedAt'] != null) {
+      returnJob.modifiedAt = DateTime.tryParse(snapshot['modifiedAt'].toString());
+    }
+    return returnJob;
   }
 }
