@@ -29,7 +29,7 @@ class Job {
   String customerPhone;
   String customerId;
   String userId;
-  bool isDeleted;
+  bool isDeleted = false;
 
   Job({
     this.id,

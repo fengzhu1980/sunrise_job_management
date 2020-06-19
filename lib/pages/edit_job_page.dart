@@ -8,6 +8,7 @@ import 'package:sunrise_job_management/widgets/public/date_time_picker.dart';
 class EditJobPage extends StatefulWidget {
   static const routeName = '/edit-job';
   final DocumentSnapshot jobData;
+  // final Future getJobsData;
 
   EditJobPage([this.jobData]);
 
@@ -47,16 +48,11 @@ class _EditJobPageState extends State<EditJobPage> {
   @override
   void initState() {
     super.initState();
-    print('initate');
     // final initJobData = ModalRoute.of(context).settings.arguments as DocumentSnapshot;
     print(widget.jobData == null);
     if (widget.jobData != null) {
       _appBarTitle = 'Edit job';
       _editJob = Job.fromSnapshot(widget.jobData);
-      print('startDate: ${_editJob.startDate}');
-      print('startTime: ${_editJob.startTime}');
-      print('endDate: ${_editJob.endDate}');
-      print('endTime: ${_editJob.endTime}');
     }
     _jobCode = _getJobCode();
   }
@@ -94,6 +90,7 @@ class _EditJobPageState extends State<EditJobPage> {
       if (_editJob.id == null) {
         // Add job
         _editJob.createdAt = DateTime.now().toUtc();
+        _editJob.isDeleted = false;
         // print('startTime: ${_editJob.startTime}');
         // print(_editJob.startTime.format(context));
         // print(
@@ -156,8 +153,6 @@ class _EditJobPageState extends State<EditJobPage> {
             duration: Duration(milliseconds: 1500),
           ),
         );
-        // TODO
-        // refresh job managment page
       }
       // final format = DateFormat.jm();
       // final time = TimeOfDay.fromDateTime(format.parse(jobData.startTime));

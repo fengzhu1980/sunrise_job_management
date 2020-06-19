@@ -12,23 +12,27 @@ class JobsPage extends StatefulWidget {
 }
 
 class _JobsPageState extends State<JobsPage> {
-  Future _futureJobsData;
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  // Future _futureJobsData;
 
-  Future getJobs() async {
-    var firestore = Firestore.instance;
-    QuerySnapshot qn = await firestore.collection('jobs').getDocuments();
-    return qn.documents;
-  }
+  // For future builder
+  // Future getJobs() async {
+  //   var firestore = Firestore.instance;
+  //   QuerySnapshot qn = await firestore.collection('jobs').getDocuments();
+  //   return qn.documents;
+  // }
 
   @override
   void initState() {
     super.initState();
-    _futureJobsData = getJobs();
+    // For future builder
+    // _futureJobsData = getJobs();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Text('Job Management'),
         actions: <Widget>[
@@ -40,22 +44,23 @@ class _JobsPageState extends State<JobsPage> {
           )
         ],
       ),
-      body: FutureBuilder(
-        future: _futureJobsData,
+      body: StreamBuilder(
+        stream: Firestore.instance.collection('jobs').orderBy('createdAt').snapshots(),
         builder: (ctx, jobsSnapshot) {
           if (jobsSnapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(),
             );
+          } else {
+            return ListView.builder(
+              itemCount: jobsSnapshot.data.documents.length,
+              itemBuilder: (_, i) => Column(
+                children: <Widget>[
+                  JobItem(jobsSnapshot.data.documents[i], scaffoldKey),
+                ],
+              ),
+            );
           }
-          return ListView.builder(
-            itemCount: jobsSnapshot.data.length,
-            itemBuilder: (_, i) => Column(
-              children: <Widget>[
-                JobItem(jobsSnapshot.data[i]),
-              ],
-            ),
-          );
         },
       ),
     );
