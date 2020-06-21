@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:sunrise_job_management/pages/auth_page.dart';
+import 'package:sunrise_job_management/pages/edit_user_page.dart';
 import 'package:sunrise_job_management/pages/jobs_overview_page.dart';
 import 'package:sunrise_job_management/pages/splash_page.dart';
 import 'package:sunrise_job_management/pages/jobs_page.dart';
 import 'package:sunrise_job_management/pages/edit_job_page.dart';
+import 'package:sunrise_job_management/pages/users_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -41,6 +43,8 @@ class MyApp extends StatelessWidget {
         JobsPage.routeName: (ctx) => JobsPage(),
         EditJobPage.routeName: (ctx) => EditJobPage(),
         JobsOverviewPage.routeName: (ctx) => JobsOverviewPage(),
+        UsersPage.routeName: (ctx) => UsersPage(),
+        EditUserPage.routeName: (ctx) => EditUserPage(),
       },
     );
   }

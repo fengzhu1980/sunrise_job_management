@@ -46,11 +46,12 @@ class _AuthPageState extends State<AuthPage> {
         // Add user
         user = User(
           id: authResult.user.uid,
-          createdAt: DateTime.now().toUtc().toString(),
+          createdAt: DateTime.now().toUtc(),
           email: email,
           isActive: true,
           username: username,
           roles: ['normal'],
+          createdByUserId: authResult.user.uid
         );
         
         await Firestore.instance

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +23,7 @@ class _EditJobPageState extends State<EditJobPage> {
 
   Job _editJob = Job(
       id: null,
-      code: 0,
+      code: 1,
       title: '',
       address: '',
       stage: '',
@@ -226,9 +228,10 @@ class _EditJobPageState extends State<EditJobPage> {
                             return const Text('Loading...');
                           }
                           final codeData = codeSnapshot.data;
+                          // TODO
+                          // Get maximum number in codeData;
+                          // final maxCode = [0, ...codeData].reduct(max);
                           codeData.forEach((element) {
-                            print(element['code']);
-                            print(_editJob.code);
                             if (element['code'] >= _editJob.code) {
                               _editJob.code = element['code'] + 1;
                             }
@@ -289,7 +292,6 @@ class _EditJobPageState extends State<EditJobPage> {
                           initStage = _editJob.stage;
                           // initStage = _initValues['stage'];
                         }
-                        print('init stage:$initStage');
                         return DropdownButtonFormField(
                           value: initStage,
                           //     ((stagesData as List<dynamic>).firstWhere((stage) {
@@ -309,9 +311,6 @@ class _EditJobPageState extends State<EditJobPage> {
                             // icon: Icon(Icons.menu),
                           ),
                           items: (stagesData as List<dynamic>).map((value) {
-                            print('value:$value');
-                            print(value['id']);
-                            print(value['stage']);
                             return DropdownMenuItem(
                               value: value['id'].toString(),
                               child: Text(value['stage'].toString()),
@@ -464,7 +463,6 @@ class _EditJobPageState extends State<EditJobPage> {
                         if (_editJob.id != null && _editJob.userId.isNotEmpty) {
                           initValue = _editJob.userId;
                         }
-                        print('user id: $initValue');
                         return DropdownButtonFormField(
                           value: initValue,
                           // ((userData as List<dynamic>).firstWhere((user) {

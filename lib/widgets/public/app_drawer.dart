@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sunrise_job_management/models/user.dart';
+import 'package:sunrise_job_management/pages/users_page.dart';
 
 import '../../pages/jobs_page.dart';
 import '../../pages/jobs_overview_page.dart';
@@ -38,6 +39,9 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.account_circle),
             title: Text('User Management'),
+            onTap: () {
+              Navigator.of(context).pushNamed(UsersPage.routeName);
+            },
           ),
           ListTile(
             leading: Icon(Icons.settings),

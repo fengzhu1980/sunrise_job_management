@@ -104,23 +104,23 @@ class _JobItemState extends State<JobItem> {
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => EditJobPage(widget.jobSnapshot)));
         },
-        trailing: PopupMenuButton<Option>(
-          onSelected: (Option result) {
+        trailing: PopupMenuButton<JobOption>(
+          onSelected: (JobOption result) {
             switch (result) {
-              case Option.Modify:
+              case JobOption.Modify:
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => EditJobPage(widget.jobSnapshot)));
                 break;
-              case Option.Delete:
+              case JobOption.Delete:
                 _showDeleteDialog();
                 break;
               default:
             }
           },
-          itemBuilder: (BuildContext context) => <PopupMenuEntry<Option>>[
-            PopupMenuItem<Option>(
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<JobOption>>[
+            PopupMenuItem<JobOption>(
               // textStyle: Co,
-              value: Option.Assign,
+              value: JobOption.Assign,
               child: Row(
                 children: <Widget>[
                   Icon(Icons.person_add),
@@ -128,12 +128,12 @@ class _JobItemState extends State<JobItem> {
                 ],
               ),
             ),
-            const PopupMenuItem<Option>(
-              value: Option.Delete,
+            const PopupMenuItem<JobOption>(
+              value: JobOption.Delete,
               child: Text('Delete'),
             ),
-            const PopupMenuItem<Option>(
-              value: Option.Modify,
+            const PopupMenuItem<JobOption>(
+              value: JobOption.Modify,
               child: Text('Modify'),
             ),
           ],
