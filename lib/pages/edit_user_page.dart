@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sunrise_job_management/models/user.dart';
+import 'package:sunrise_job_management/widgets/public/user_avatar_picker.dart';
 
 class EditUserPage extends StatefulWidget {
   static const routeName = '/edit-user';
@@ -15,6 +17,7 @@ class EditUserPage extends StatefulWidget {
 class _EditUserPageState extends State<EditUserPage> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   var _appBarTitle = 'Create user';
+  PickedFile _userImageFile;
   User _editUser = User(
       id: null,
       email: '',
@@ -36,6 +39,10 @@ class _EditUserPageState extends State<EditUserPage> {
       _appBarTitle = 'Edit user';
       _editUser = widget.userData;
     }
+  }
+
+  void _pickedImage(PickedFile image) {
+    _userImageFile = image;
   }
 
   void _trySubmit() async {
@@ -104,6 +111,28 @@ class _EditUserPageState extends State<EditUserPage> {
                         ],
                       ),
                     ),
+                    UserAvatarPicker(_pickedImage),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'First Name'),
+                      textCapitalization: TextCapitalization.words,
+                      initialValue: _editUser.firstName,
+                      validator: _generalValidator,
+                      onSaved: (value) => _editUser.firstName = value,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Middle Name'),
+                      textCapitalization: TextCapitalization.words,
+                      initialValue: _editUser.middleName,
+                      validator: _generalValidator,
+                      onSaved: (value) => _editUser.middleName = value,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Last Name'),
+                      textCapitalization: TextCapitalization.words,
+                      initialValue: _editUser.lastName,
+                      validator: _generalValidator,
+                      onSaved: (value) => _editUser.lastName = value,
+                    ),
                     TextFormField(
                       key: ValueKey('email'),
                       decoration: InputDecoration(labelText: 'Email'),
@@ -125,6 +154,16 @@ class _EditUserPageState extends State<EditUserPage> {
                         return null;
                       },
                       onSaved: (value) => _editUser.username = value,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Phone'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value.isEmpty || !RegExp(r'^(((\+?64\s*[-\.]?[3-9]|\(?0[3-9]\)?)\s*[-\.]?\d{3}\s*[-\.]?\d{4})|((\+?64\s*[-\.\(]?2\d{1}[-\.\)]?|\(?02\d{1}\)?)\s*[-\.]?\d{3}\s*[-\.]?\d{3,5})|((\+?64\s*[-\.]?[-\.\(]?800[-\.\)]?|[-\.\(]?0800[-\.\)]?)\s*[-\.]?\d{3}\s*[-\.]?(\d{2}|\d{5})))$').hasMatch(value)) {
+                          return 'Phone is required and should be a number';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
                       key: ValueKey('password'),
