@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:sunrise_job_management/models/user.dart';
 import 'package:sunrise_job_management/widgets/public/user_avatar_picker.dart';
 
@@ -17,9 +21,10 @@ class EditUserPage extends StatefulWidget {
 class _EditUserPageState extends State<EditUserPage> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   var _appBarTitle = 'Create user';
-  PickedFile _userImageFile;
+  File _userImageFile;
   User _editUser = User(
       id: null,
+      avatar: '',
       email: '',
       isActive: true,
       username: '',
@@ -29,6 +34,7 @@ class _EditUserPageState extends State<EditUserPage> {
       lastName: '',
       roles: ['normal']);
   final GlobalKey<FormState> _userFormKey = GlobalKey<FormState>();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -39,17 +45,142 @@ class _EditUserPageState extends State<EditUserPage> {
       _appBarTitle = 'Edit user';
       _editUser = widget.userData;
     }
+    print('avatar: ${_editUser.avatar}');
   }
 
-  void _pickedImage(PickedFile image) {
+  @override
+  void dispose() {
+    super.dispose();
+    _passwordController.clear();
+  }
+
+  void _pickedImage(File image) {
     _userImageFile = image;
+    print(_userImageFile);
+    print(_userImageFile.path);
+    print(p.extension(_userImageFile.path));
+  }
+
+  void _deleteUserAvatar() {
+    _editUser.avatar = null;
   }
 
   void _trySubmit() async {
     final isValid = _userFormKey.currentState.validate();
     FocusScope.of(context).unfocus();
-    // Add createdAt, createdByUserId, roles
-    // Update modifiedAt, modifiedByUserId, check has password or not
+
+    if (isValid) {
+      try {
+        setState(() {
+          _isLoading = true;
+        });
+        
+        // TODO
+        // Check is email inused
+        _userFormKey.currentState.save();
+        final _currentUser = await FirebaseAuth.instance.currentUser();
+
+        // Upload image
+        if (_userImageFile != null) {
+          String _fileExtension = p.extension(_userImageFile.path);
+          final ref = FirebaseStorage.instance
+              .ref()
+              .child('user_image')
+              .child(_currentUser.uid + _fileExtension);
+          await ref.putFile(_userImageFile).onComplete;
+          final _url = await ref.getDownloadURL();
+          _editUser.avatar = _url;
+        }
+
+        // Add user
+        var _oprationType = 'Add';
+        var _isSuccess = false;
+        if (_editUser.id == null) {
+          // Add createdAt, createdByUserId, roles
+          _editUser.createdAt = DateTime.now().toUtc();
+          _editUser.createdByUserId = _currentUser.uid;
+          _editUser.isActive = true;
+
+          // Add auth user
+          AuthResult _authResult = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: _editUser.email,
+            password: _passwordController.text,
+          );
+
+          DocumentReference userRef =
+              Firestore.instance.collection('users').document(_authResult.user.uid);
+          _editUser.id = _authResult.user.uid;
+          await userRef.setData(_editUser.toMap());
+          _isSuccess = true;
+          setState(() {
+            _isLoading = false;
+          });
+        } else {
+          // Update modifiedAt, modifiedByUserId
+          _oprationType = 'Update';
+          _editUser.modifiedAt = DateTime.now().toUtc();
+          _editUser.modifiedByUserId = _currentUser.uid;
+
+          // TODO
+          // 1. Get edit user auth info
+          // 2. Update user info
+          // 3. Check password changed or not
+          // 4. Update password
+
+          // TODO
+          // Check user email
+
+          await Firestore.instance
+              .collection('users')
+              .document(_editUser.id)
+              .updateData(_editUser.toMap());
+
+          // Check has password or not
+          // print('passw: ${_passwordController.text}');
+          // if (_passwordController.text.isNotEmpty) {
+          //   // var _tempResult = await FirebaseAuth.instance.confirmPasswordReset(oobCode, newPassword)
+          //   await _currentUser.updatePassword(_passwordController.text);
+          // }
+
+          _isSuccess = true;
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        if (_isSuccess) {
+          scaffoldKey.currentState.showSnackBar(
+            SnackBar(
+              content: Text('$_oprationType user successed.'),
+              backgroundColor: Colors.green,
+              duration: Duration(milliseconds: 1500),
+            ),
+          );
+        }
+      } catch (err) {
+        String message = 'An error occurred.';
+        if (err.message != null) {
+          message = err.message;
+        }
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('An error occurred!'),
+            content: Text(message),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Okay'),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+              )
+            ],
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   String _emailValidator(String value) {
@@ -111,7 +242,7 @@ class _EditUserPageState extends State<EditUserPage> {
                         ],
                       ),
                     ),
-                    UserAvatarPicker(_pickedImage),
+                    UserAvatarPicker(_pickedImage, _editUser.avatar, _deleteUserAvatar),
                     TextFormField(
                       decoration: InputDecoration(labelText: 'First Name'),
                       textCapitalization: TextCapitalization.words,
@@ -123,7 +254,6 @@ class _EditUserPageState extends State<EditUserPage> {
                       decoration: InputDecoration(labelText: 'Middle Name'),
                       textCapitalization: TextCapitalization.words,
                       initialValue: _editUser.middleName,
-                      validator: _generalValidator,
                       onSaved: (value) => _editUser.middleName = value,
                     ),
                     TextFormField(
@@ -138,6 +268,7 @@ class _EditUserPageState extends State<EditUserPage> {
                       decoration: InputDecoration(labelText: 'Email'),
                       keyboardType: TextInputType.emailAddress,
                       initialValue: _editUser.email,
+                      readOnly: _editUser.id != null,
                       validator: _emailValidator,
                       onSaved: (value) => _editUser.email = value,
                     ),
@@ -158,54 +289,104 @@ class _EditUserPageState extends State<EditUserPage> {
                     TextFormField(
                       decoration: InputDecoration(labelText: 'Phone'),
                       keyboardType: TextInputType.number,
+                      initialValue: _editUser.phone,
                       validator: (value) {
-                        if (value.isEmpty || !RegExp(r'^(((\+?64\s*[-\.]?[3-9]|\(?0[3-9]\)?)\s*[-\.]?\d{3}\s*[-\.]?\d{4})|((\+?64\s*[-\.\(]?2\d{1}[-\.\)]?|\(?02\d{1}\)?)\s*[-\.]?\d{3}\s*[-\.]?\d{3,5})|((\+?64\s*[-\.]?[-\.\(]?800[-\.\)]?|[-\.\(]?0800[-\.\)]?)\s*[-\.]?\d{3}\s*[-\.]?(\d{2}|\d{5})))$').hasMatch(value)) {
+                        if (value.isEmpty ||
+                            !RegExp(r'^(((\+?64\s*[-\.]?[3-9]|\(?0[3-9]\)?)\s*[-\.]?\d{3}\s*[-\.]?\d{4})|((\+?64\s*[-\.\(]?2\d{1}[-\.\)]?|\(?02\d{1}\)?)\s*[-\.]?\d{3}\s*[-\.]?\d{3,5})|((\+?64\s*[-\.]?[-\.\(]?800[-\.\)]?|[-\.\(]?0800[-\.\)]?)\s*[-\.]?\d{3}\s*[-\.]?(\d{2}|\d{5})))$')
+                                .hasMatch(value)) {
                           return 'Phone is required and should be a number';
                         }
                         return null;
                       },
+                      onSaved: (value) => _editUser.phone = value,
                     ),
+                    if (_editUser.id == null)
                     TextFormField(
                       key: ValueKey('password'),
+                      controller: _passwordController,
                       decoration: InputDecoration(labelText: 'Password'),
                       obscureText: true,
                       validator: (value) {
-                        if (value.isEmpty || value.length < 7) {
+                        if (_editUser.id == null && value.length < 7) {
                           return 'Password must be at least 7 characters long';
                         }
                         return null;
                       },
-                      onSaved: (value) => _editUser.password = value,
                     ),
+                    if (_editUser.id == null)
                     TextFormField(
                       decoration:
                           InputDecoration(labelText: 'Confirm Password'),
                       obscureText: true,
                       validator: (value) {
-                        if (value != _editUser.password) {
+                        if (value != _passwordController.text) {
                           return 'Password do not match!';
                         }
                         return null;
+                      },
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 14.0),
+                      child: Text(
+                        'Roles',
+                        style: Theme.of(context).textTheme.headline6,
+                      ),
+                    ),
+                    StreamBuilder(
+                      stream:
+                          Firestore.instance.collection('roles').snapshots(),
+                      builder: (ctx, roleSnapshot) {
+                        if (!roleSnapshot.hasData) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        final rolesData = roleSnapshot.data.documents;
+                        return Column(
+                          children: (rolesData as List<dynamic>).map((role) {
+                            return CheckboxListTile(
+                              title: Text(role['role']),
+                              value: _editUser.roles.contains(role['role']),
+                              onChanged: (bool value) {
+                                setState(() {
+                                  if (value) {
+                                    if (!_editUser.roles
+                                        .contains(role['role'])) {
+                                      _editUser.roles.add(role['role']);
+                                    }
+                                  } else {
+                                    if (_editUser.roles
+                                        .contains(role['role'])) {
+                                      _editUser.roles.remove(role['role']);
+                                    }
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        );
                       },
                     ),
                     SizedBox(
                       height: 20,
                     ),
                     if (_isLoading)
-                      CircularProgressIndicator()
+                      Center(child: CircularProgressIndicator())
                     else
-                      RaisedButton(
-                        child: Text('Save'),
-                        onPressed: _trySubmit,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                      Center(
+                        child: RaisedButton(
+                          child: Text('Save'),
+                          onPressed: _trySubmit,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 40.0, vertical: 8.0),
+                          color: Theme.of(context).primaryColor,
+                          textColor:
+                              Theme.of(context).primaryTextTheme.button.color,
+                          elevation: 8,
                         ),
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 30.0, vertical: 8.0),
-                        color: Theme.of(context).primaryColor,
-                        textColor:
-                            Theme.of(context).primaryTextTheme.button.color,
-                        elevation: 8,
                       ),
                   ],
                 ),

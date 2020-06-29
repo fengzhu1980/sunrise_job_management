@@ -17,6 +17,7 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   final _auth = FirebaseAuth.instance;
   var _isLoading = false;
+  String _error;
 
   void _submitAuthForm(
     String email,
@@ -37,6 +38,12 @@ class _AuthPageState extends State<AuthPage> {
           email: email,
           password: password,
         );
+      } else if (authMode == AuthMode.Reset) {
+        await _auth.sendPasswordResetEmail(email: email);
+        setState(() {
+          _error = 'A password reset link has been sent to $email';
+          _isLoading = false;
+        });
       } else {
         authResult = await _auth.createUserWithEmailAndPassword(
           email: email,
@@ -45,15 +52,14 @@ class _AuthPageState extends State<AuthPage> {
 
         // Add user
         user = User(
-          id: authResult.user.uid,
-          createdAt: DateTime.now().toUtc(),
-          email: email,
-          isActive: true,
-          username: username,
-          roles: ['normal'],
-          createdByUserId: authResult.user.uid
-        );
-        
+            id: authResult.user.uid,
+            createdAt: DateTime.now().toUtc(),
+            email: email,
+            isActive: true,
+            username: username,
+            roles: ['normal'],
+            createdByUserId: authResult.user.uid);
+
         await Firestore.instance
             .collection('users')
             .document(authResult.user.uid)
@@ -84,13 +90,54 @@ class _AuthPageState extends State<AuthPage> {
 
       setState(() {
         _isLoading = false;
+        _error = err.message;
       });
     } catch (err) {
       print(err);
       setState(() {
         _isLoading = false;
+        _error = err.message;
       });
     }
+  }
+
+  Widget _showAlert() {
+    if (_error != null) {
+      return Container(
+        color: Colors.amberAccent,
+        width: double.infinity,
+        padding: EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Icon(Icons.error_outline),
+            ),
+            Expanded(
+              child: Text(
+                _error,
+                maxLines: 3,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    _error = null;
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 0,
+    );
   }
 
   @override
@@ -121,6 +168,7 @@ class _AuthPageState extends State<AuthPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
+                  _showAlert(),
                   Flexible(
                     child: Container(
                       margin: EdgeInsets.only(bottom: 20.0),

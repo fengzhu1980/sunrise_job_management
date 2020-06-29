@@ -24,6 +24,7 @@ class _AuthFormState extends State<AuthForm>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   AuthMode _authMode = AuthMode.Login;
+  bool _showForgotPassword = true;
   String _email = '';
   String _password = '';
   String _username = '';
@@ -89,16 +90,71 @@ class _AuthFormState extends State<AuthForm>
     } else {
       setState(() {
         _authMode = AuthMode.Login;
+        _showForgotPassword = true;
       });
       _controller.reverse();
     }
   }
 
+  List<Widget> buildInputs() {
+    List<Widget> textFields = [];
+
+    // If were in the sign up state add name
+    if (_authMode == AuthMode.Signup) {
+      textFields.add(
+        TextFormField(
+          decoration: InputDecoration(labelText: 'Username'),
+          autocorrect: true,
+          textCapitalization: TextCapitalization.words,
+          validator: (value) {
+            if (value.isEmpty || value.length < 3) {
+              return 'Please enter at least 3 characters';
+            }
+            return null;
+          },
+          onSaved: (value) => _username = value,
+        ),
+      );
+    }
+
+    // Add email & password
+    textFields.add(
+      TextFormField(
+        key: ValueKey('email'),
+        decoration: InputDecoration(labelText: 'Email'),
+        keyboardType: TextInputType.emailAddress,
+        validator: (value) {
+          if (value.isEmpty || !value.contains('@')) {
+            return 'Please enter a valid email address.';
+          }
+          return null;
+        },
+        onSaved: (value) => _email = value,
+      ),
+    );
+    textFields.add(
+      TextFormField(
+        key: ValueKey('password'),
+        decoration: InputDecoration(labelText: 'Password'),
+        obscureText: true,
+        controller: _passwordController,
+        validator: (value) {
+          if (value.isEmpty || value.length < 7) {
+            return 'Password must be at least 7 characters long';
+          }
+          return null;
+        },
+        onSaved: (value) => _password = value,
+      ),
+    );
+
+    return textFields;
+  }
+
   TextFormField _setConfirmPasswordTextFormField() {
     return TextFormField(
       enabled: _authMode == AuthMode.Signup,
-      decoration:
-          InputDecoration(labelText: 'Confirm Password'),
+      decoration: InputDecoration(labelText: 'Confirm Password'),
       obscureText: true,
       validator: _authMode == AuthMode.Signup
           ? (value) {
@@ -140,6 +196,40 @@ class _AuthFormState extends State<AuthForm>
           child: textFormField,
         ),
       ),
+    );
+  }
+
+  Widget _forgotPasswordWidget(bool visible) {
+    return Visibility(
+      child: FlatButton(
+        child: Text(
+          'Forgot Password?',
+        ),
+        onPressed: () {
+          setState(() {
+            _authMode = AuthMode.Reset;
+            _showForgotPassword = false;
+          });
+        },
+      ),
+      visible: visible,
+    );
+  }
+
+    Widget _switchToLoginWidget(bool visible) {
+    return Visibility(
+      child: FlatButton(
+        child: Text(
+          'Switch to login',
+        ),
+        onPressed: () {
+          setState(() {
+            _authMode = AuthMode.Login;
+            _showForgotPassword = true;
+          });
+        },
+      ),
+      visible: visible,
     );
   }
 
@@ -190,24 +280,24 @@ class _AuthFormState extends State<AuthForm>
                     },
                     onSaved: (value) => _username = value,
                   ),
-                TextFormField(
-                  key: ValueKey('password'),
-                  decoration: InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                  controller: _passwordController,
-                  validator: (value) {
-                    if (value.isEmpty || value.length < 7) {
-                      return 'Password must be at least 7 characters long';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) => _password = value,
-                ),
+                if (_authMode != AuthMode.Reset)
+                  TextFormField(
+                    key: ValueKey('password'),
+                    decoration: InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    controller: _passwordController,
+                    validator: (value) {
+                      if (value.isEmpty || value.length < 7) {
+                        return 'Password must be at least 7 characters long';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => _password = value,
+                  ),
                 if (_authMode == AuthMode.Signup)
                   TextFormField(
                     enabled: _authMode == AuthMode.Signup,
-                    decoration:
-                        InputDecoration(labelText: 'Confirm Password'),
+                    decoration: InputDecoration(labelText: 'Confirm Password'),
                     obscureText: true,
                     validator: _authMode == AuthMode.Signup
                         ? (value) {
@@ -226,7 +316,9 @@ class _AuthFormState extends State<AuthForm>
                 else
                   RaisedButton(
                     child:
-                        Text(_authMode == AuthMode.Login ? 'LOGIN' : 'SIGN UP'),
+                        Text(_authMode == AuthMode.Login ? 'LOGIN'
+                          : _authMode == AuthMode.Signup ? 'SIGN UP'
+                            : 'RESET'),
                     onPressed: _trySubmit,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -245,6 +337,8 @@ class _AuthFormState extends State<AuthForm>
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   textColor: Theme.of(context).primaryColor,
                 ),
+                _forgotPasswordWidget(_showForgotPassword),
+                _switchToLoginWidget(!_showForgotPassword),
               ],
             ),
           ),

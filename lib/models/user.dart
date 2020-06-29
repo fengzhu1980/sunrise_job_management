@@ -2,13 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class User {
-  final String id;
+  String id;
   String avatar;
   DateTime createdAt;
   String email;
   bool isActive;
   String username;
-  String password;
   String phone;
   String firstName;
   String middleName;
@@ -25,7 +24,6 @@ class User {
     @required this.email,
     @required this.isActive,
     @required this.username,
-    this.password,
     this.phone,
     this.firstName,
     this.middleName,
@@ -37,7 +35,7 @@ class User {
   });
 
   Map<String, dynamic> toMap() {
-    return {
+    Map<String, dynamic> returnUser = {
       'id': id,
       'avatar': avatar,
       'createdAt': createdAt,
@@ -45,7 +43,6 @@ class User {
       'isActive': isActive,
       'username': username,
       'phone': phone,
-      'password': password,
       'firstName': firstName,
       'middleName': middleName,
       'lastName': lastName,
@@ -54,6 +51,7 @@ class User {
       'modifiedAt': modifiedAt,
       'modifiedByUserId': modifiedByUserId,
     };
+    return returnUser;
   }
 
   static User fromSnapshot(DocumentSnapshot snapshot) {

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:sunrise_job_management/models/user.dart';
 
 import 'package:sunrise_job_management/widgets/public/app_drawer.dart';
 import 'package:sunrise_job_management/widgets/public/top_bar.dart';
@@ -26,7 +27,11 @@ class JobsOverviewPage extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 );
               }
-              final userData = userSnapshot.data;
+              print('bbbbb');
+              print(userSnapshot.data);
+              print(userSnapshot.data['email']);
+              print(userSnapshot.data['avatar']);
+              User userData = User.fromSnapshot(userSnapshot.data);
               return Scaffold(
                 appBar: TopBar('My Jobs'),
                 drawer: AppDrawer(userData),

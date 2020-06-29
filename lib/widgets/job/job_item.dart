@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:sunrise_job_management/enums/enum_option.dart';
+import 'package:sunrise_job_management/enums/enum_file.dart';
 import 'package:sunrise_job_management/pages/edit_job_page.dart';
 
 class JobItem extends StatefulWidget {

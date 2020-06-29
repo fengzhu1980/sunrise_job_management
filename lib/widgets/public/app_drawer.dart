@@ -3,23 +3,22 @@ import 'package:sunrise_job_management/models/user.dart';
 import 'package:sunrise_job_management/pages/users_page.dart';
 
 import '../../pages/jobs_page.dart';
-import '../../pages/jobs_overview_page.dart';
 
 class AppDrawer extends StatelessWidget {
   AppDrawer(this.userData);
 
-  final dynamic userData;
+  final User userData;
   @override
   Widget build(BuildContext context) {
     // print('aaaaa');
-    // print(userData);
-    // print(userData['email']);
+    print(userData);
+    print(userData.email);
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
           AppBar(
-            title: Text('Hello ${userData['username']}!'),
+            title: Text('Hello ${userData.username}!'),
             automaticallyImplyLeading: false,
           ),
           ListTile(
@@ -29,6 +28,7 @@ class AppDrawer extends StatelessWidget {
               Navigator.of(context).pop();
             },
           ),
+          if (userData.roles.contains('admin'))
           ListTile(
             leading: Icon(Icons.message),
             title: Text('Job Management'),
@@ -36,6 +36,7 @@ class AppDrawer extends StatelessWidget {
               Navigator.of(context).pushNamed(JobsPage.routeName);
             },
           ),
+          if (userData.roles.contains('admin'))
           ListTile(
             leading: Icon(Icons.account_circle),
             title: Text('User Management'),

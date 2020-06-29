@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:sunrise_job_management/enums/enum_option.dart';
+import 'package:sunrise_job_management/enums/enum_file.dart';
 import 'package:sunrise_job_management/models/user.dart';
 import 'package:sunrise_job_management/pages/edit_user_page.dart';
 
@@ -20,7 +20,9 @@ class _UserItemState extends State<UserItem> {
   @override
   void initState() {
     super.initState();
+    print('error?');
     _userFromSnapshot = User.fromSnapshot(widget.userSnapshot);
+    print(_userFromSnapshot.id);
   }
 
   void _showDeleteDialog() async {
@@ -58,12 +60,21 @@ class _UserItemState extends State<UserItem> {
 
   @override
   Widget build(BuildContext context) {
+    print('aaa');
+    print((_userFromSnapshot.avatar == null || _userFromSnapshot.avatar.isEmpty));
     return Card(
       child: ListTile(
-        leading: Icon(
-          Icons.person,
-          color: _userFromSnapshot.isActive ? Colors.blue : Colors.red,
+        key: ValueKey(_userFromSnapshot.id),
+        leading: CircleAvatar(
+          radius: 20,
+          backgroundColor: Colors.grey,
+          backgroundImage: (_userFromSnapshot.avatar == null || _userFromSnapshot.avatar.isEmpty) ? AssetImage('images/avatar.jpg')
+            : NetworkImage(_userFromSnapshot.avatar),
         ),
+        // Icon(
+        //   Icons.person,
+        //   color: _userFromSnapshot.isActive ? Colors.blue : Colors.red,
+        // ),
         title: Text(
             '${_userFromSnapshot.firstName != null ? _userFromSnapshot.firstName : _userFromSnapshot.username} ${_userFromSnapshot.lastName == null ? '' : _userFromSnapshot.lastName}'),
         subtitle: Text('${_userFromSnapshot.username} - ${_userFromSnapshot.phone == null ? 'Phone' : _userFromSnapshot.phone}'),
