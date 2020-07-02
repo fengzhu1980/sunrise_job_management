@@ -45,7 +45,11 @@ class _UsersPageState extends State<UsersPage> {
                 itemCount: usersSnapshot.data.documents.length,
                 itemBuilder: (_, i) => Column(
                   children: [
-                    UserItem(usersSnapshot.data.documents[i], scaffoldKey),
+                    UserItem(
+                      key: ValueKey(usersSnapshot.data.documents[i]['id']),
+                      userSnapshot: usersSnapshot.data.documents[i],
+                      scaffoldKey: scaffoldKey,
+                    ),
                   ],
                 ),
               );

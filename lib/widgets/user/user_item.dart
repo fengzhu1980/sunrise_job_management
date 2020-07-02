@@ -8,7 +8,11 @@ class UserItem extends StatefulWidget {
   final DocumentSnapshot userSnapshot;
   final GlobalKey<ScaffoldState> scaffoldKey;
 
-  UserItem(this.userSnapshot, this.scaffoldKey);
+  const UserItem({
+    Key key,
+    this.userSnapshot,
+    this.scaffoldKey,
+  }) : super(key: key);
 
   @override
   _UserItemState createState() => _UserItemState();
@@ -61,15 +65,17 @@ class _UserItemState extends State<UserItem> {
   @override
   Widget build(BuildContext context) {
     print('aaa');
-    print((_userFromSnapshot.avatar == null || _userFromSnapshot.avatar.isEmpty));
+    print(
+        (_userFromSnapshot.avatar == null || _userFromSnapshot.avatar.isEmpty));
     return Card(
       child: ListTile(
-        key: ValueKey(_userFromSnapshot.id),
         leading: CircleAvatar(
           radius: 20,
           backgroundColor: Colors.grey,
-          backgroundImage: (_userFromSnapshot.avatar == null || _userFromSnapshot.avatar.isEmpty) ? AssetImage('images/avatar.jpg')
-            : NetworkImage(_userFromSnapshot.avatar),
+          backgroundImage: (_userFromSnapshot.avatar == null ||
+                  _userFromSnapshot.avatar.isEmpty)
+              ? AssetImage('images/avatar.jpg')
+              : NetworkImage(_userFromSnapshot.avatar),
         ),
         // Icon(
         //   Icons.person,
@@ -77,7 +83,8 @@ class _UserItemState extends State<UserItem> {
         // ),
         title: Text(
             '${_userFromSnapshot.firstName != null ? _userFromSnapshot.firstName : _userFromSnapshot.username} ${_userFromSnapshot.lastName == null ? '' : _userFromSnapshot.lastName}'),
-        subtitle: Text('${_userFromSnapshot.username} - ${_userFromSnapshot.phone == null ? 'Phone' : _userFromSnapshot.phone}'),
+        subtitle: Text(
+            '${_userFromSnapshot.username} - ${_userFromSnapshot.phone == null ? 'Phone' : _userFromSnapshot.phone}'),
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => EditUserPage(_userFromSnapshot)));
@@ -109,25 +116,25 @@ class _UserItemState extends State<UserItem> {
               ),
             ),
             if (!_userFromSnapshot.isActive)
-            PopupMenuItem<UserOption>(
-              value: UserOption.Modify,
-              child: Row(
-                children: [
-                  Icon(Icons.airplanemode_active),
-                  Text('Active'),
-                ],
+              PopupMenuItem<UserOption>(
+                value: UserOption.Modify,
+                child: Row(
+                  children: [
+                    Icon(Icons.airplanemode_active),
+                    Text('Active'),
+                  ],
+                ),
               ),
-            ),
             if (_userFromSnapshot.isActive)
-            PopupMenuItem<UserOption>(
-              value: UserOption.Modify,
-              child: Row(
-                children: [
-                  Icon(Icons.airplanemode_inactive),
-                  Text('Inactive'),
-                ],
+              PopupMenuItem<UserOption>(
+                value: UserOption.Modify,
+                child: Row(
+                  children: [
+                    Icon(Icons.airplanemode_inactive),
+                    Text('Inactive'),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

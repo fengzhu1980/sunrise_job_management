@@ -216,23 +216,6 @@ class _AuthFormState extends State<AuthForm>
     );
   }
 
-    Widget _switchToLoginWidget(bool visible) {
-    return Visibility(
-      child: FlatButton(
-        child: Text(
-          'Switch to login',
-        ),
-        onPressed: () {
-          setState(() {
-            _authMode = AuthMode.Login;
-            _showForgotPassword = true;
-          });
-        },
-      ),
-      visible: visible,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final deviceSize = MediaQuery.of(context).size;
@@ -337,8 +320,8 @@ class _AuthFormState extends State<AuthForm>
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   textColor: Theme.of(context).primaryColor,
                 ),
-                _forgotPasswordWidget(_showForgotPassword),
-                _switchToLoginWidget(!_showForgotPassword),
+                if (_authMode != AuthMode.Reset)
+                  _forgotPasswordWidget(_showForgotPassword),
               ],
             ),
           ),

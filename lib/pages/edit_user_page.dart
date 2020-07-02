@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -12,7 +13,7 @@ class EditUserPage extends StatefulWidget {
   static const routeName = '/edit-user';
   final User userData;
 
-  EditUserPage([this.userData]);
+  const EditUserPage([this.userData]);
 
   @override
   _EditUserPageState createState() => _EditUserPageState();
@@ -65,6 +66,27 @@ class _EditUserPageState extends State<EditUserPage> {
     _editUser.avatar = null;
   }
 
+  Future<String> _uploadImage(String uid) async {
+    String _fileExtension = p.extension(_userImageFile.path);
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('user_image')
+        .child(uid + _fileExtension);
+    await ref.putFile(_userImageFile).onComplete;
+    return await ref.getDownloadURL();
+  }
+
+  static Future<AuthResult> _register(String email, String password) async {
+    FirebaseApp app = await FirebaseApp.configure(
+      name: 'Secondary',
+      options: await FirebaseApp.instance.options,
+    );
+    return FirebaseAuth.fromApp(app).createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+  }
+
   void _trySubmit() async {
     final isValid = _userFormKey.currentState.validate();
     FocusScope.of(context).unfocus();
@@ -74,23 +96,24 @@ class _EditUserPageState extends State<EditUserPage> {
         setState(() {
           _isLoading = true;
         });
-        
+
         // TODO
         // Check is email inused
         _userFormKey.currentState.save();
         final _currentUser = await FirebaseAuth.instance.currentUser();
 
         // Upload image
-        if (_userImageFile != null) {
-          String _fileExtension = p.extension(_userImageFile.path);
-          final ref = FirebaseStorage.instance
-              .ref()
-              .child('user_image')
-              .child(_currentUser.uid + _fileExtension);
-          await ref.putFile(_userImageFile).onComplete;
-          final _url = await ref.getDownloadURL();
-          _editUser.avatar = _url;
-        }
+        // if (_userImageFile != null) {
+        //   String _fileExtension = p.extension(_userImageFile.path);
+        //   final ref = FirebaseStorage.instance
+        //       .ref()
+        //       .child('user_image')
+        //       // TODO
+        //       .child(_currentUser.uid + _fileExtension);
+        //   await ref.putFile(_userImageFile).onComplete;
+        //   final _url = await ref.getDownloadURL();
+        //   _editUser.avatar = _url;
+        // }
 
         // Add user
         var _oprationType = 'Add';
@@ -102,13 +125,20 @@ class _EditUserPageState extends State<EditUserPage> {
           _editUser.isActive = true;
 
           // Add auth user
-          AuthResult _authResult = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: _editUser.email,
-            password: _passwordController.text,
-          );
+          AuthResult _authResult = await _register(_editUser.email, _passwordController.text);
+          // AuthResult _authResult =
+          //     await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          //   email: _editUser.email,
+          //   password: _passwordController.text,
+          // );
 
-          DocumentReference userRef =
-              Firestore.instance.collection('users').document(_authResult.user.uid);
+          if (_userImageFile != null) {
+            _editUser.avatar = await _uploadImage(_authResult.user.uid);
+          }
+
+          DocumentReference userRef = Firestore.instance
+              .collection('users')
+              .document(_authResult.user.uid);
           _editUser.id = _authResult.user.uid;
           await userRef.setData(_editUser.toMap());
           _isSuccess = true;
@@ -120,6 +150,11 @@ class _EditUserPageState extends State<EditUserPage> {
           _oprationType = 'Update';
           _editUser.modifiedAt = DateTime.now().toUtc();
           _editUser.modifiedByUserId = _currentUser.uid;
+
+          if (_userImageFile != null) {
+            _editUser.avatar = await _uploadImage(_editUser.id);
+            // _editUser.avatar = _uploadImage(_currentUser.uid);
+          }
 
           // TODO
           // 1. Get edit user auth info
@@ -158,6 +193,7 @@ class _EditUserPageState extends State<EditUserPage> {
         }
       } catch (err) {
         String message = 'An error occurred.';
+        print('mess: ${err.message}');
         if (err.message != null) {
           message = err.message;
         }
@@ -242,7 +278,8 @@ class _EditUserPageState extends State<EditUserPage> {
                         ],
                       ),
                     ),
-                    UserAvatarPicker(_pickedImage, _editUser.avatar, _deleteUserAvatar),
+                    UserAvatarPicker(
+                        _pickedImage, _editUser.avatar, _deleteUserAvatar),
                     TextFormField(
                       decoration: InputDecoration(labelText: 'First Name'),
                       textCapitalization: TextCapitalization.words,
@@ -301,30 +338,30 @@ class _EditUserPageState extends State<EditUserPage> {
                       onSaved: (value) => _editUser.phone = value,
                     ),
                     if (_editUser.id == null)
-                    TextFormField(
-                      key: ValueKey('password'),
-                      controller: _passwordController,
-                      decoration: InputDecoration(labelText: 'Password'),
-                      obscureText: true,
-                      validator: (value) {
-                        if (_editUser.id == null && value.length < 7) {
-                          return 'Password must be at least 7 characters long';
-                        }
-                        return null;
-                      },
-                    ),
+                      TextFormField(
+                        key: ValueKey('password'),
+                        controller: _passwordController,
+                        decoration: InputDecoration(labelText: 'Password'),
+                        obscureText: true,
+                        validator: (value) {
+                          if (_editUser.id == null && value.length < 7) {
+                            return 'Password must be at least 7 characters long';
+                          }
+                          return null;
+                        },
+                      ),
                     if (_editUser.id == null)
-                    TextFormField(
-                      decoration:
-                          InputDecoration(labelText: 'Confirm Password'),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value != _passwordController.text) {
-                          return 'Password do not match!';
-                        }
-                        return null;
-                      },
-                    ),
+                      TextFormField(
+                        decoration:
+                            InputDecoration(labelText: 'Confirm Password'),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value != _passwordController.text) {
+                            return 'Password do not match!';
+                          }
+                          return null;
+                        },
+                      ),
                     Padding(
                       padding: EdgeInsets.only(top: 14.0),
                       child: Text(
