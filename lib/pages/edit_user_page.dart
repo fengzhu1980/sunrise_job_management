@@ -12,8 +12,9 @@ import 'package:sunrise_job_management/widgets/public/user_avatar_picker.dart';
 class EditUserPage extends StatefulWidget {
   static const routeName = '/edit-user';
   final User userData;
+  final bool isFromSetting;
 
-  const EditUserPage([this.userData]);
+  EditUserPage([this.userData, this.isFromSetting = false]);
 
   @override
   _EditUserPageState createState() => _EditUserPageState();
@@ -43,7 +44,11 @@ class _EditUserPageState extends State<EditUserPage> {
     super.initState();
     print(widget.userData == null);
     if (widget.userData != null) {
-      _appBarTitle = 'Edit user';
+      if (widget.isFromSetting) {
+        _appBarTitle = 'Setting';
+      } else {
+        _appBarTitle = 'Edit user';
+      }
       _editUser = widget.userData;
     }
     print('avatar: ${_editUser.avatar}');
@@ -171,11 +176,11 @@ class _EditUserPageState extends State<EditUserPage> {
               .updateData(_editUser.toMap());
 
           // Check has password or not
-          // print('passw: ${_passwordController.text}');
-          // if (_passwordController.text.isNotEmpty) {
-          //   // var _tempResult = await FirebaseAuth.instance.confirmPasswordReset(oobCode, newPassword)
-          //   await _currentUser.updatePassword(_passwordController.text);
-          // }
+          print('passw: ${_passwordController.text}');
+          if (_passwordController.text.isNotEmpty) {
+            // var _tempResult = await FirebaseAuth.instance.confirmPasswordReset(oobCode, newPassword)
+            await _currentUser.updatePassword(_passwordController.text);
+          }
 
           _isSuccess = true;
           setState(() {
@@ -185,7 +190,7 @@ class _EditUserPageState extends State<EditUserPage> {
         if (_isSuccess) {
           scaffoldKey.currentState.showSnackBar(
             SnackBar(
-              content: Text('$_oprationType user successed.'),
+              content: Text('$_oprationType successed.'),
               backgroundColor: Colors.green,
               duration: Duration(milliseconds: 1500),
             ),
@@ -337,7 +342,7 @@ class _EditUserPageState extends State<EditUserPage> {
                       },
                       onSaved: (value) => _editUser.phone = value,
                     ),
-                    if (_editUser.id == null)
+                    if (_editUser.id == null || widget.isFromSetting)
                       TextFormField(
                         key: ValueKey('password'),
                         controller: _passwordController,
@@ -350,7 +355,7 @@ class _EditUserPageState extends State<EditUserPage> {
                           return null;
                         },
                       ),
-                    if (_editUser.id == null)
+                    if (_editUser.id == null || widget.isFromSetting)
                       TextFormField(
                         decoration:
                             InputDecoration(labelText: 'Confirm Password'),
@@ -362,48 +367,50 @@ class _EditUserPageState extends State<EditUserPage> {
                           return null;
                         },
                       ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 14.0),
-                      child: Text(
-                        'Roles',
-                        style: Theme.of(context).textTheme.headline6,
+                    if (!widget.isFromSetting)
+                      Padding(
+                        padding: EdgeInsets.only(top: 14.0),
+                        child: Text(
+                          'Roles',
+                          style: Theme.of(context).textTheme.headline6,
+                        ),
                       ),
-                    ),
-                    StreamBuilder(
-                      stream:
-                          Firestore.instance.collection('roles').snapshots(),
-                      builder: (ctx, roleSnapshot) {
-                        if (!roleSnapshot.hasData) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                        final rolesData = roleSnapshot.data.documents;
-                        return Column(
-                          children: (rolesData as List<dynamic>).map((role) {
-                            return CheckboxListTile(
-                              title: Text(role['role']),
-                              value: _editUser.roles.contains(role['role']),
-                              onChanged: (bool value) {
-                                setState(() {
-                                  if (value) {
-                                    if (!_editUser.roles
-                                        .contains(role['role'])) {
-                                      _editUser.roles.add(role['role']);
-                                    }
-                                  } else {
-                                    if (_editUser.roles
-                                        .contains(role['role'])) {
-                                      _editUser.roles.remove(role['role']);
-                                    }
-                                  }
-                                });
-                              },
+                    if (!widget.isFromSetting)
+                      StreamBuilder(
+                        stream:
+                            Firestore.instance.collection('roles').snapshots(),
+                        builder: (ctx, roleSnapshot) {
+                          if (!roleSnapshot.hasData) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
                             );
-                          }).toList(),
-                        );
-                      },
-                    ),
+                          }
+                          final rolesData = roleSnapshot.data.documents;
+                          return Column(
+                            children: (rolesData as List<dynamic>).map((role) {
+                              return CheckboxListTile(
+                                title: Text(role['role']),
+                                value: _editUser.roles.contains(role['role']),
+                                onChanged: (bool value) {
+                                  setState(() {
+                                    if (value) {
+                                      if (!_editUser.roles
+                                          .contains(role['role'])) {
+                                        _editUser.roles.add(role['role']);
+                                      }
+                                    } else {
+                                      if (_editUser.roles
+                                          .contains(role['role'])) {
+                                        _editUser.roles.remove(role['role']);
+                                      }
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
                     SizedBox(
                       height: 20,
                     ),

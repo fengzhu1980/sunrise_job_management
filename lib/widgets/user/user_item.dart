@@ -43,6 +43,7 @@ class _UserItemState extends State<UserItem> {
       print('isActive: $isActive');
       final userId = _userFromSnapshot.id;
       print('userId: $userId');
+
     } catch (err) {
       await showDialog(
         context: context,
@@ -117,7 +118,7 @@ class _UserItemState extends State<UserItem> {
             ),
             if (!_userFromSnapshot.isActive)
               PopupMenuItem<UserOption>(
-                value: UserOption.Modify,
+                value: UserOption.Active,
                 child: Row(
                   children: [
                     Icon(Icons.airplanemode_active),
@@ -127,7 +128,7 @@ class _UserItemState extends State<UserItem> {
               ),
             if (_userFromSnapshot.isActive)
               PopupMenuItem<UserOption>(
-                value: UserOption.Modify,
+                value: UserOption.Inactive,
                 child: Row(
                   children: [
                     Icon(Icons.airplanemode_inactive),

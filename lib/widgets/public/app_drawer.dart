@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sunrise_job_management/models/user.dart';
+import 'package:sunrise_job_management/pages/edit_user_page.dart';
 import 'package:sunrise_job_management/pages/users_page.dart';
 
 import '../../pages/jobs_page.dart';
@@ -18,7 +20,7 @@ class AppDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: <Widget>[
           AppBar(
-            title: Text('Hello ${userData.username}!'),
+            title: Text('Hello ${userData.username}'),
             automaticallyImplyLeading: false,
           ),
           ListTile(
@@ -47,6 +49,18 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.settings),
             title: Text('Settings'),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => EditUserPage(userData, true),
+              ));
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.exit_to_app),
+            title: Text('Logout'),
+            onTap: () {
+              FirebaseAuth.instance.signOut();
+            },
           ),
         ],
       ),

@@ -312,14 +312,15 @@ class _AuthFormState extends State<AuthForm>
                     textColor: Theme.of(context).primaryTextTheme.button.color,
                     elevation: 8,
                   ),
-                FlatButton(
-                  child: Text(
-                      '${_authMode == AuthMode.Login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),
-                  onPressed: _switchAuthMode,
-                  padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  textColor: Theme.of(context).primaryColor,
-                ),
+                if (_authMode == AuthMode.Reset)
+                  FlatButton(
+                    child: Text(
+                        '${_authMode == AuthMode.Login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),
+                    onPressed: _switchAuthMode,
+                    padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textColor: Theme.of(context).primaryColor,
+                  ),
                 if (_authMode != AuthMode.Reset)
                   _forgotPasswordWidget(_showForgotPassword),
               ],
