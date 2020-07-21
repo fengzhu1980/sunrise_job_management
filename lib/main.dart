@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
             return SplashPage();
           }
           if (userSnapshot.hasData) {
-            return JobsOverviewPage();
+            return JobsOverviewPage(userSnapshot.data.uid);
           } else {
             return AuthPage();
           }

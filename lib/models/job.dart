@@ -61,7 +61,7 @@ class Job {
   });
 
   Map<String, dynamic> toMap() {
-    return {
+    final returnJob = {
       'id': id,
       'code': code,
       'title': title,
@@ -95,6 +95,19 @@ class Job {
       'userId': userId,
       'isDeleted': isDeleted
     };
+    // if (startDate != null) {
+    //   returnJob['startDate'] = _getDateTimeDate(startDate.toUtc());
+    // }
+    // if (endDate != null) {
+    //   returnJob['endDate'] = _getDateTimeDate(endDate.toUtc());
+    // }
+    // if (startDateReal != null) {
+    //   returnJob['startDateReal'] = _getDateTimeDate(startDateReal.toUtc());
+    // }
+    // if (endDateReal != null) {
+    //   returnJob['endDateReal'] = _getDateTimeDate(endDateReal.toUtc());
+    // }
+    return returnJob;
   }
 
   static Job fromSnapshot(DocumentSnapshot snapshot) {
@@ -106,7 +119,8 @@ class Job {
       stage: snapshot['stage'],
       startDate: DateTime.tryParse(snapshot['startDate'].toDate().toString()),
       endDate: DateTime.tryParse(snapshot['endDate'].toDate().toString()),
-      startTime: TimeOfDay(hour: snapshot['startHour'], minute: snapshot['startMin']),
+      startTime:
+          TimeOfDay(hour: snapshot['startHour'], minute: snapshot['startMin']),
       endTime: TimeOfDay(hour: snapshot['endHour'], minute: snapshot['endMin']),
       // startDateReal: DateTime.tryParse(snapshot['startDateReal']?.toString()),
       // endDateReal: DateTime.tryParse(snapshot['endDateReal']?.toString()),
@@ -123,20 +137,30 @@ class Job {
       isDeleted: snapshot['isDeleted'],
     );
     if (snapshot['startDateReal'] != null) {
-      returnJob.startDateReal = DateTime.tryParse(snapshot['startDateReal'].toDate().toString());
+      returnJob.startDateReal =
+          DateTime.tryParse(snapshot['startDateReal'].toDate().toString());
     }
     if (snapshot['endDateReal'] != null) {
-      returnJob.endDateReal = DateTime.tryParse(snapshot['endDateReal'].toDate().toString());
+      returnJob.endDateReal =
+          DateTime.tryParse(snapshot['endDateReal'].toDate().toString());
     }
-    if ((snapshot['startHourReal'] != null) && (snapshot['startMinReal'] != null)) {
-      returnJob.startTimeReal = TimeOfDay(hour: snapshot['startHourReal'], minute: snapshot['startMinReal']);
+    if ((snapshot['startHourReal'] != null) &&
+        (snapshot['startMinReal'] != null)) {
+      returnJob.startTimeReal = TimeOfDay(
+          hour: snapshot['startHourReal'], minute: snapshot['startMinReal']);
     }
     if ((snapshot['endHourReal'] != null) && (snapshot['endMinReal'] != null)) {
-      returnJob.startTimeReal = TimeOfDay(hour: snapshot['endHourReal'], minute: snapshot['endMinReal']);
+      returnJob.startTimeReal = TimeOfDay(
+          hour: snapshot['endHourReal'], minute: snapshot['endMinReal']);
     }
     if (snapshot['modifiedAt'] != null) {
-      returnJob.modifiedAt = DateTime.tryParse(snapshot['modifiedAt'].toString());
+      returnJob.modifiedAt =
+          DateTime.tryParse(snapshot['modifiedAt'].toString());
     }
     return returnJob;
+  }
+
+  DateTime _getDateTimeDate(DateTime dateTime) {
+    return DateTime(dateTime.year, dateTime.month, dateTime.day);
   }
 }
