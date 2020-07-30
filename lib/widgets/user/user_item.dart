@@ -29,21 +29,32 @@ class _UserItemState extends State<UserItem> {
     print(_userFromSnapshot.id);
   }
 
-  void _showDeleteDialog() async {
-    final userName = _userFromSnapshot.username;
-    print('username: $userName');
-  }
-
   void _tryDeleteUser(UserOption option) async {
     try {
       bool isActive = false;
+      var actionString = 'Inactive';
       if (option == UserOption.Active) {
         isActive = true;
+        actionString = 'Active';
       }
       print('isActive: $isActive');
       final userId = _userFromSnapshot.id;
       print('userId: $userId');
-
+      await Firestore.instance
+          .collection('users')
+          .document(userId)
+          .updateData({'isActive': isActive}).then((value) => {
+                widget.scaffoldKey.currentState.showSnackBar(
+                  SnackBar(
+                    content: Text('User $actionString success'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(milliseconds: 2000),
+                  ),
+                )
+              });
+      setState(() {
+        _userFromSnapshot = User.fromSnapshot(widget.userSnapshot);
+      });
     } catch (err) {
       await showDialog(
         context: context,

@@ -45,21 +45,30 @@ class _JobsPageState extends State<JobsPage> {
         ],
       ),
       body: StreamBuilder(
-        stream: Firestore.instance.collection('jobs').orderBy('createdAt').snapshots(),
+        stream: Firestore.instance
+            .collection('jobs')
+            .orderBy('createdAt')
+            .snapshots(),
         builder: (ctx, jobsSnapshot) {
           if (jobsSnapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(),
             );
           } else {
-            return ListView.builder(
-              itemCount: jobsSnapshot.data.documents.length,
-              itemBuilder: (_, i) => Column(
-                children: <Widget>[
-                  JobItem(jobsSnapshot.data.documents[i], scaffoldKey),
-                ],
-              ),
-            );
+            if (jobsSnapshot.data.documents.length == 0) {
+              return Center(
+                child: Text('No Jobs'),
+              );
+            } else {
+              return ListView.builder(
+                itemCount: jobsSnapshot.data.documents.length,
+                itemBuilder: (_, i) => Column(
+                  children: <Widget>[
+                    JobItem(jobsSnapshot.data.documents[i], scaffoldKey),
+                  ],
+                ),
+              );
+            }
           }
         },
       ),

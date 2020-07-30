@@ -2,11 +2,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:sunrise_job_management/pages/auth_page.dart';
+import 'package:sunrise_job_management/pages/edit_hazard_page.dart';
+import 'package:sunrise_job_management/pages/edit_swms_page.dart';
+import 'package:sunrise_job_management/pages/edit_task_page.dart';
 import 'package:sunrise_job_management/pages/edit_user_page.dart';
+import 'package:sunrise_job_management/pages/hazards_page.dart';
 import 'package:sunrise_job_management/pages/jobs_overview_page.dart';
 import 'package:sunrise_job_management/pages/splash_page.dart';
 import 'package:sunrise_job_management/pages/jobs_page.dart';
 import 'package:sunrise_job_management/pages/edit_job_page.dart';
+import 'package:sunrise_job_management/pages/swms_page.dart';
+import 'package:sunrise_job_management/pages/tasks_page.dart';
 import 'package:sunrise_job_management/pages/users_page.dart';
 
 void main() {
@@ -46,6 +52,12 @@ class MyApp extends StatelessWidget {
         JobsOverviewPage.routeName: (ctx) => JobsOverviewPage(),
         UsersPage.routeName: (ctx) => UsersPage(),
         EditUserPage.routeName: (ctx) => EditUserPage(),
+        TasksPage.routeName: (ctx) => TasksPage(),
+        EditTaskPage.routeName: (ctx) => EditTaskPage(),
+        HazardsPage.routeName: (ctx) => HazardsPage(),
+        EditHazardPage.routeName: (ctx) => EditHazardPage(),
+        SwmsPage.routeName: (ctx) => SwmsPage(),
+        EditSwmsPage.routeName: (ctx) => EditSwmsPage(),
       },
     );
   }

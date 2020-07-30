@@ -229,6 +229,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                   ),
                   RaisedButton(
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Icon(
                           Icons.work,
