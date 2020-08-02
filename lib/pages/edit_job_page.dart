@@ -1,8 +1,5 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 import 'package:sunrise_job_management/models/job.dart';
 import 'package:sunrise_job_management/widgets/public/date_time_picker.dart';
@@ -22,20 +19,22 @@ class _EditJobPageState extends State<EditJobPage> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   Job _editJob = Job(
-      id: null,
-      code: 1,
-      title: '',
-      address: '',
-      stage: '',
-      startDate: DateTime.now().add(Duration(days: 1)),
-      endDate: DateTime.now().add(Duration(days: 1)),
-      startTime: const TimeOfDay(hour: 9, minute: 00),
-      endTime: const TimeOfDay(hour: 10, minute: 00),
-      tasks: [],
-      customerName: '',
-      customerEmail: '',
-      customerPhone: '',
-      userId: '');
+    id: null,
+    code: 1,
+    title: '',
+    address: '',
+    stage: '',
+    startDate: DateTime.now().add(Duration(days: 1)),
+    endDate: DateTime.now().add(Duration(days: 1)),
+    startTime: const TimeOfDay(hour: 9, minute: 00),
+    endTime: const TimeOfDay(hour: 10, minute: 00),
+    tasks: [],
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    userId: '',
+    note: '',
+  );
   var _appBarTitle = 'Create new job';
   final GlobalKey<FormState> _jobFormKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -51,7 +50,6 @@ class _EditJobPageState extends State<EditJobPage> {
   void initState() {
     super.initState();
     // final initJobData = ModalRoute.of(context).settings.arguments as DocumentSnapshot;
-    print(widget.jobData == null);
     if (widget.jobData != null) {
       _appBarTitle = 'Edit job';
       _editJob = Job.fromSnapshot(widget.jobData);
@@ -69,36 +67,12 @@ class _EditJobPageState extends State<EditJobPage> {
       });
       _jobFormKey.currentState.save();
 
-      // Save job
-      // final jobData = Job(
-      //   code: _initValues['code'].toString(),
-      //   // title: _initValues['title'].trim(),
-      //   // address: _initValues['address'].trim(),
-      //   stage: _initValues['stage'],
-      //   startDate: _initValues['startDate'].toString(),
-      //   endDate: _initValues['endDate'].toString(),
-      //   // startTime: _initValues['startTime'].format(context),
-      //   // endTime: _initValues['endTime'].format(context),
-      //   tasks: _initValues['tasks'],
-      //   createdAt: DateTime.now().toUtc().toString(),
-      //   // customerName: _initValues['customerName'].trim(),
-      //   // customerEmail: _initValues['customerEmail'].trim(),
-      //   // customerPhone: _initValues['customerPhone'].trim(),
-      //   userId: _userId,
-      // );
-
       var oprationType = 'Add';
       var _isSuccess = false;
       if (_editJob.id == null) {
         // Add job
         _editJob.createdAt = DateTime.now().toUtc();
         _editJob.isDeleted = false;
-        // print('startTime: ${_editJob.startTime}');
-        // print(_editJob.startTime.format(context));
-        // print(
-            // 'parse startTime1: ${DateFormat.jm().format(DateTime(_editJob.startTime.hour, _editJob.startTime.minute))}');
-        // print(
-            // 'parse startTime2: ${DateFormat.jm().parse(_editJob.startTime.toString()).toString()}');
         try {
           DocumentReference jobRef =
               Firestore.instance.collection('jobs').document();
@@ -110,6 +84,7 @@ class _EditJobPageState extends State<EditJobPage> {
               .collection('job_codes')
               .document()
               .setData({'code': _editJob.code});
+
           _isSuccess = true;
         } catch (err) {
           await showDialog(
@@ -141,7 +116,7 @@ class _EditJobPageState extends State<EditJobPage> {
             .document(_editJob.id)
             .updateData(_editJob.toMap());
         _isSuccess = true;
-        
+
         setState(() {
           _isLoading = false;
         });
@@ -488,6 +463,31 @@ class _EditJobPageState extends State<EditJobPage> {
                             );
                           }).toList(),
                         );
+                      },
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 20),
+                      child: Row(
+                        children: <Widget>[
+                          Icon(Icons.note),
+                          Text(
+                            'Note',
+                            style: Theme.of(context).textTheme.headline6,
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Note',
+                        hintText: 'Please input note...',
+                      ),
+                      initialValue: _editJob.note,
+                      textCapitalization: TextCapitalization.sentences,
+                      minLines: 2,
+                      maxLines: 3,
+                      onSaved: (value) {
+                        _editJob.note = value;
                       },
                     ),
                     SizedBox(height: 12),

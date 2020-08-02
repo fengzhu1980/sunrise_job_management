@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +5,7 @@ class Task {
   String id;
   double price;
   String task;
+  double hours;
   DateTime createdAt;
   bool isActive;
 
@@ -14,6 +13,7 @@ class Task {
     @required this.id,
     @required this.price,
     @required this.task,
+    @required this.hours,
     this.createdAt,
     @required this.isActive,
   });
@@ -23,6 +23,7 @@ class Task {
       'id': id,
       'price': price,
       'task': task,
+      'hours': hours,
       'createdAt': createdAt,
       'isActive': isActive,
     };
@@ -39,6 +40,10 @@ class Task {
 
     if (snapshot['price'] != null) {
       returnTask.price = snapshot['price'].toDouble();
+    }
+
+    if (snapshot['hours'] != null) {
+      returnTask.hours = snapshot['hours'].toDouble();
     }
     return returnTask;
   }

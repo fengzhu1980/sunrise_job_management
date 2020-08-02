@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-// TODO Add created by, modified by
+// TODO Add modified by
 class Job {
   String id;
   int code;
@@ -30,6 +30,8 @@ class Job {
   String customerId;
   String userId;
   bool isDeleted = false;
+  String note;
+  String createdBy;
 
   Job({
     this.id,
@@ -58,6 +60,8 @@ class Job {
     this.customerId,
     this.userId,
     this.isDeleted,
+    this.note,
+    this.createdBy,
   });
 
   Map<String, dynamic> toMap() {
@@ -93,7 +97,9 @@ class Job {
       'customerPhone': customerPhone,
       'customerId': customerId,
       'userId': userId,
-      'isDeleted': isDeleted
+      'isDeleted': isDeleted,
+      'note': note,
+      'createdBy': createdBy,
     };
     // if (startDate != null) {
     //   returnJob['startDate'] = _getDateTimeDate(startDate.toUtc());
@@ -135,6 +141,8 @@ class Job {
       customerId: snapshot['customerId'],
       userId: snapshot['userId'],
       isDeleted: snapshot['isDeleted'],
+      note: snapshot['note'],
+      createdBy: snapshot['createdBy'],
     );
     if (snapshot['startDateReal'] != null) {
       returnJob.startDateReal =

@@ -22,6 +22,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
     id: null,
     price: 0,
     task: '',
+    hours: 1,
     isActive: true,
   );
 
@@ -104,6 +105,19 @@ class _EditTaskPageState extends State<EditTaskPage> {
     }
   }
 
+  String _numberValidator(String value) {
+    if (value.isEmpty) {
+      return 'Please enter a number.';
+    }
+    if (double.tryParse(value) == null) {
+      return 'Please enter a valid number.';
+    }
+    if (double.parse(value) <= 0) {
+      return 'Please enter a number greater than zero.';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,18 +187,19 @@ class _EditTaskPageState extends State<EditTaskPage> {
                       onSaved: (value) {
                         _editTask.price = double.parse(value);
                       },
-                      validator: (value) {
-                        if (value.isEmpty) {
-                          return 'Please enter a price.';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number.';
-                        }
-                        if (double.parse(value) <= 0) {
-                          return 'Please enter a number greater than zero.';
-                        }
-                        return null;
+                      validator: _numberValidator,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Hours',
+                        hintText: 'Task Hours',
+                      ),
+                      keyboardType: TextInputType.number,
+                      initialValue: _editTask.hours.toStringAsFixed(2),
+                      onSaved: (value) {
+                        _editTask.hours = double.parse(value);
                       },
+                      validator: _numberValidator,
                     ),
                     SizedBox(height: 12),
                     if (_isLoading)

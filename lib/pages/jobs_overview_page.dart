@@ -3,9 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sunrise_job_management/models/job.dart';
+import 'package:sunrise_job_management/models/stage.dart';
 import 'package:sunrise_job_management/models/task.dart';
 import 'package:sunrise_job_management/models/user.dart';
-import 'package:sunrise_job_management/pages/job_details.dart';
+import 'package:sunrise_job_management/pages/job_details_page.dart';
 
 import 'package:sunrise_job_management/widgets/public/app_drawer.dart';
 import 'package:sunrise_job_management/widgets/public/top_bar.dart';
@@ -31,7 +32,8 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
   DateTime _selectedDay;
   User _userData;
   Stream _streamUserData;
-  Map<String, String> _tasks;
+  List<Task> _tasks;
+  Map<String, String> _stages;
 
   Stream _getUser() {
     return Firestore.instance
@@ -41,14 +43,23 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
   }
 
   void _getTasks() async {
-    print('get tasks');
     var tempTaskDocuments =
         await Firestore.instance.collection('tasks').getDocuments();
     var tempTasks = tempTaskDocuments.documents;
 
     tempTasks.forEach((task) {
       var tempTask = Task.fromSnapshot(task);
-      _tasks[tempTask.id] = tempTask.task;
+      _tasks.add(tempTask);
+    });
+  }
+
+  void _getStages() async {
+    var tempStageDocuments =
+        await Firestore.instance.collection('stages').getDocuments();
+    var tempStages = tempStageDocuments.documents;
+    tempStages.forEach((stage) {
+      var tempStage = Stage.fromSnapshot(stage);
+      _stages[tempStage.id] = tempStage.stage;
     });
   }
 
@@ -57,11 +68,13 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     super.initState();
     _eventController = TextEditingController();
     _events = {};
-    _tasks = {};
+    _tasks = List<Task>();
+    _stages = {};
     var tempNow = DateTime.now();
     _selectedDay = _getDateTimeDate(tempNow);
     _streamUserData = _getUser();
     _getTasks();
+    _getStages();
 
     print('userid: ${widget.userId}');
 
@@ -211,6 +224,8 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                           shrinkWrap: true,
                           itemCount: job.tasks.length,
                           itemBuilder: (BuildContext buildContext, i) {
+                            final tempTask = _tasks.firstWhere(
+                                (element) => element.id == job.tasks[i]);
                             return Container(
                               // width: 100,
                               child: Row(
@@ -218,7 +233,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: <Widget>[
                                   Icon(Icons.done),
-                                  Text(_tasks[job.tasks[i]]),
+                                  Text(tempTask.task)
                                 ],
                               ),
                             );
@@ -244,7 +259,8 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                     onPressed: () {
                       Navigator.of(context).pop(true);
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => JobDetailsPage(job)));
+                          builder: (context) =>
+                              JobDetailsPage(job, _tasks, _stages)));
                     },
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
