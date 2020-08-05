@@ -47,12 +47,18 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Text('Job #${widget.job.code.toString()} details'),
       ),
-      body: Padding(
-        padding: EdgeInsets.only(top: 2),
-        child: _widgetOptions(_selectedIndex),
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).requestFocus(FocusNode());
+        },
+        child: Padding(
+          padding: EdgeInsets.only(top: 2),
+          child: _widgetOptions(_selectedIndex),
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

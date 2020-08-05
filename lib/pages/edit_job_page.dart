@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -66,12 +67,14 @@ class _EditJobPageState extends State<EditJobPage> {
         _isLoading = true;
       });
       _jobFormKey.currentState.save();
+      final _currentUser = await FirebaseAuth.instance.currentUser();
 
       var oprationType = 'Add';
       var _isSuccess = false;
       if (_editJob.id == null) {
         // Add job
         _editJob.createdAt = DateTime.now().toUtc();
+        _editJob.createdBy = _currentUser.uid;
         _editJob.isDeleted = false;
         try {
           DocumentReference jobRef =
@@ -110,6 +113,7 @@ class _EditJobPageState extends State<EditJobPage> {
         // Update job
         oprationType = 'Update';
         _editJob.modifiedAt = DateTime.now().toUtc();
+        _editJob.modifiedBy = _currentUser.uid;
 
         await Firestore.instance
             .collection('jobs')

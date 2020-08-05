@@ -38,7 +38,7 @@ class Hazard {
       title: snapshot['title'],
       description: snapshot['description'],
       swms: List.from(snapshot['swms']),
-      createdAt: DateTime.tryParse(snapshot['createdAt'].toString()),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString()),
       isActive: snapshot['isActive'],
     );
 

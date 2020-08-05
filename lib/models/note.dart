@@ -43,7 +43,7 @@ class Note {
       id: snapshot.documentID,
       relatedId: snapshot['relatedId'],
       note: snapshot['note'],
-      createdAt: DateTime.tryParse(snapshot['createdAt'].toString()),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString()),
       isDeleted: snapshot['isDeleted'],
       createdBy: snapshot['createdBy'],
       fristName: snapshot['fristName'],

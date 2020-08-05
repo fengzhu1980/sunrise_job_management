@@ -34,7 +34,7 @@ class Task {
       id: snapshot.documentID,
       // price: snapshot['price'],
       task: snapshot['task'],
-      createdAt: DateTime.tryParse(snapshot['createdAt'].toString()),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString()),
       isActive: snapshot['isActive'],
     );
 

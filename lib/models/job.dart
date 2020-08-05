@@ -32,6 +32,7 @@ class Job {
   bool isDeleted = false;
   String note;
   String createdBy;
+  String modifiedBy;
 
   Job({
     this.id,
@@ -62,6 +63,7 @@ class Job {
     this.isDeleted,
     this.note,
     this.createdBy,
+    this.modifiedBy,
   });
 
   Map<String, dynamic> toMap() {
@@ -100,6 +102,7 @@ class Job {
       'isDeleted': isDeleted,
       'note': note,
       'createdBy': createdBy,
+      'modifiedBy': modifiedBy,
     };
     // if (startDate != null) {
     //   returnJob['startDate'] = _getDateTimeDate(startDate.toUtc());
@@ -132,7 +135,7 @@ class Job {
       // endDateReal: DateTime.tryParse(snapshot['endDateReal']?.toString()),
       // startTimeReal: TimeOfDay(hour: snapshot['startHourReal'], minute: snapshot['startMinReal']),
       // endTimeReal: TimeOfDay(hour: snapshot['endHourReal'], minute: snapshot['endMinReal']),
-      createdAt: DateTime.tryParse(snapshot['createdAt'].toString()),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString()),
       // modifiedAt: DateTime.tryParse(snapshot['modifiedAt']?.toString()),
       tasks: List.from(snapshot['tasks']),
       customerName: snapshot['customerName'],
@@ -143,6 +146,7 @@ class Job {
       isDeleted: snapshot['isDeleted'],
       note: snapshot['note'],
       createdBy: snapshot['createdBy'],
+      modifiedBy: snapshot['modifiedBy'],
     );
     if (snapshot['startDateReal'] != null) {
       returnJob.startDateReal =

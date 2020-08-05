@@ -27,7 +27,7 @@ class Swms {
     return Swms(
       id: snapshot.documentID,
       title: snapshot['title'],
-      createdAt: DateTime.tryParse(snapshot['createdAt'].toString()),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString()),
       isActive: snapshot['isActive'],
     );
   }

@@ -30,12 +30,39 @@ class NoteItem extends StatelessWidget {
                   'Notes',
                   style: Theme.of(context).textTheme.headline5,
                 ),
-                // NoteNew(scaffoldKey, relatedId),
               ],
             ),
+            SizedBox(
+              height: 8,
+            ),
+            if (job.note.isNotEmpty)
+              StreamBuilder(
+                stream: Firestore.instance
+                    .collection('users')
+                    .document(job.createdBy)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else {
+                    final userData = snapshot.data;
+                    final tempUser = User.fromSnapshot(userData);
+                    final tempNote = Note(
+                      fristName: tempUser.firstName,
+                      lastName: tempUser.lastName,
+                      note: job.note,
+                      createdAt: job.createdAt,
+                    );
+                    return NoteBubble(tempNote);
+                  }
+                },
+              ),
             StreamBuilder(
               stream: Firestore.instance
                   .collection('notes')
+                  .where('relatedId', isEqualTo: job.id)
                   .orderBy(
                     'createdAt',
                     descending: true,
@@ -43,54 +70,38 @@ class NoteItem extends StatelessWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return Center(
-                    child: CircularProgressIndicator(),
+                  return SizedBox(
+                    height: 5,
                   );
+                  // return Center(
+                  //   child: CircularProgressIndicator(),
+                  // );
                 }
                 final notesData = snapshot.data.documents;
+                print('notesData: $notesData');
+                print('notesData: ${notesData.length}');
+                print('job.note: ${job.note}');
                 return ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: 100,
+                    minHeight: 10,
                   ),
                   child: Column(
                     children: <Widget>[
-                      if (job.note.isNotEmpty)
-                        StreamBuilder(
-                          stream: Firestore.instance
-                              .collection('users')
-                              .document(job.createdBy)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            } else {
-                              final userData = snapshot.data;
-                              print(userData['id']);
-                              final tempUser = User.fromSnapshot(userData);
-                              final tempNote = Note(
-                                fristName: tempUser.firstName,
-                                lastName: tempUser.lastName,
-                                note: job.note,
-                              );
-                              return NoteBubble(tempNote);
-                            }
-                          },
+                      if (notesData.length > 0)
+                        ListView.builder(
+                          shrinkWrap: true,
+                          reverse: true,
+                          itemCount: notesData.length,
+                          itemBuilder: (ctx, index) => NoteBubble(
+                            Note.fromSnapshot(notesData[index]),
+                          ),
                         ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        reverse: true,
-                        itemCount: notesData.length,
-                        itemBuilder: (ctx, index) => NoteBubble(
-                          Note.fromSnapshot(notesData[index]),
-                        ),
-                      ),
                     ],
                   ),
                 );
               },
             ),
+            NoteNew(scaffoldKey, job.id),
           ],
         ),
       ),

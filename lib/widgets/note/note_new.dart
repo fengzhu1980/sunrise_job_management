@@ -6,8 +6,7 @@ import 'package:sunrise_job_management/models/note.dart';
 class NoteNew extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final String jobId;
-  final Note noteData;
-  NoteNew([this.scaffoldKey, this.jobId, this.noteData]);
+  NoteNew(this.scaffoldKey, this.jobId);
 
   @override
   _NoteNewState createState() => _NoteNewState();
@@ -24,14 +23,6 @@ class _NoteNewState extends State<NoteNew> {
     createdAt: DateTime.now().toUtc(),
     isDeleted: false,
   );
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.noteData != null) {
-      _editNote = widget.noteData;
-    }
-  }
 
   void _saveNote() async {
     final isValid = _noteFormKey.currentState.validate();
@@ -51,6 +42,7 @@ class _NoteNewState extends State<NoteNew> {
       if (_editNote.id == null) {
         // Add note
         _editNote.relatedId = widget.jobId;
+        // _editNote.note = _editNote.note;
         _editNote.createdAt = DateTime.now().toUtc();
         _editNote.createdBy = user.uid;
         _editNote.fristName = userData['firstName'];
@@ -135,19 +127,24 @@ class _NoteNewState extends State<NoteNew> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      // margin: EdgeInsets.only(top: 8),
       padding: EdgeInsets.all(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Expanded(
-            child: TextField(
+      child: Form(
+        key: _noteFormKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextField(
               controller: _controller,
+              // textAlignVertical: TextAlignVertical.top,
               textCapitalization: TextCapitalization.sentences,
               autocorrect: true,
               enableSuggestions: true,
+              minLines: 3,
+              maxLines: 4,
               decoration: InputDecoration(
-                labelText: 'Note',
+                border: OutlineInputBorder(),
+                labelText: 'New Note',
                 hintText: 'Please input note...',
               ),
               onChanged: (value) {
@@ -156,26 +153,26 @@ class _NoteNewState extends State<NoteNew> {
                 });
               },
             ),
-          ),
-          SizedBox(height: 12),
-          if (_isLoading)
-            Center(
-              child: CircularProgressIndicator(),
-            ),
-          if (!_isLoading)
-            Center(
-              child: RaisedButton(
-                child: Text('Save Note'),
-                onPressed: _saveNote,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                color: Theme.of(context).primaryColor,
-                textColor: Theme.of(context).primaryTextTheme.button.color,
-                elevation: 3,
+            SizedBox(height: 12),
+            if (_isLoading)
+              Center(
+                child: CircularProgressIndicator(),
               ),
-            ),
-        ],
+            if (!_isLoading)
+              Center(
+                child: RaisedButton(
+                  child: Text('Save Note'),
+                  onPressed: _saveNote,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  color: Theme.of(context).primaryColor,
+                  textColor: Theme.of(context).primaryTextTheme.button.color,
+                  elevation: 3,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

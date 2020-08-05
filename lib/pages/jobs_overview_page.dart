@@ -76,8 +76,6 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     _getTasks();
     _getStages();
 
-    print('userid: ${widget.userId}');
-
     // DateTime _tempMonday =
     //     DateTime.now().subtract(Duration(days: DateTime.monday));
     // DateTime _tempSunday =
@@ -155,8 +153,6 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
   }
 
   void _getEventsByDateTime(DateTime first, DateTime last) async {
-    print('first: $first');
-    print('last: $last');
     var tempJobDocuments = await Firestore.instance
         .collection('jobs')
         .where('userId', isEqualTo: widget.userId)
@@ -329,10 +325,6 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
               child: CircularProgressIndicator(),
             );
           }
-          print('bbbbb');
-          print(userSnapshot.data);
-          print(userSnapshot.data['email']);
-          print(userSnapshot.data['avatar']);
           _userData = User.fromSnapshot(userSnapshot.data);
           return Scaffold(
             appBar: TopBar('My Jobs'),
@@ -685,9 +677,6 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
   }
 
   Widget _buildEventList(BuildContext ctx, String userId) {
-    print('user_id: ${userId}');
-    print('_selectedDay: ${_selectedDay}');
-
     // return ListView(
     //   children: _selectedEvents
     //       .map((event) => Container(
@@ -704,12 +693,11 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     //           ))
     //       .toList(),
     // );
-
     return StreamBuilder(
       stream: Firestore.instance
           .collection('jobs')
           .where('userId', isEqualTo: userId)
-          .where('startDate', isGreaterThan: _selectedDay)
+          .where('startDate', isGreaterThanOrEqualTo: _selectedDay)
           .where('startDate', isLessThan: _getNextMidnight(_selectedDay))
           .snapshots(),
       builder: (ctx, jobsSnapshot) {

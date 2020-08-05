@@ -27,7 +27,7 @@ class Stage {
     final returnStage = Stage(
       id: snapshot.documentID,
       stage: snapshot['stage'],
-      createdAt: DateTime.tryParse(snapshot['createdAt'].toString()),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString()),
       isActive: snapshot['isActive'],
     );
     return returnStage;
