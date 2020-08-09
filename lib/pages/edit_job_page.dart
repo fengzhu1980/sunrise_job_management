@@ -335,36 +335,63 @@ class _EditJobPageState extends State<EditJobPage> {
                         style: Theme.of(context).textTheme.headline6,
                       ),
                     ),
-                    StreamBuilder(
-                      stream:
-                          Firestore.instance.collection('tasks').snapshots(),
-                      builder: (ctx, tasksSnapshot) {
-                        if (!tasksSnapshot.hasData) {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
+                    FormField(
+                      builder: (field) {
+                        return StreamBuilder(
+                          stream: Firestore.instance
+                              .collection('tasks')
+                              .snapshots(),
+                          builder: (ctx, tasksSnapshot) {
+                            if (!tasksSnapshot.hasData) {
+                              return Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            final tasksData = tasksSnapshot.data.documents;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Column(
+                                    children: (tasksData as List<dynamic>)
+                                        .map((task) {
+                                  return CheckboxListTile(
+                                    title: Text(task['task']),
+                                    value: _editJob.tasks.contains(task['id']),
+                                    onChanged: (bool value) {
+                                      setState(() {
+                                        if (value) {
+                                          if (!_editJob.tasks
+                                              .contains(task['id'])) {
+                                            _editJob.tasks.add(task['id']);
+                                          }
+                                        } else {
+                                          if (_editJob.tasks
+                                              .contains(task['id'])) {
+                                            _editJob.tasks.remove(task['id']);
+                                          }
+                                        }
+                                      });
+                                    },
+                                  );
+                                }).toList()),
+                                Text(
+                                  field.errorText ?? '',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).errorColor,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      validator: (value) {
+                        if (_editJob.tasks.length == 0) {
+                          return 'Please select task';
+                        } else {
+                          return null;
                         }
-                        final tasksData = tasksSnapshot.data.documents;
-                        return Column(
-                            children: (tasksData as List<dynamic>).map((task) {
-                          return CheckboxListTile(
-                            title: Text(task['task']),
-                            value: _editJob.tasks.contains(task['id']),
-                            onChanged: (bool value) {
-                              setState(() {
-                                if (value) {
-                                  if (!_editJob.tasks.contains(task['id'])) {
-                                    _editJob.tasks.add(task['id']);
-                                  }
-                                } else {
-                                  if (_editJob.tasks.contains(task['id'])) {
-                                    _editJob.tasks.remove(task['id']);
-                                  }
-                                }
-                              });
-                            },
-                          );
-                        }).toList());
                       },
                     ),
                     const Divider(

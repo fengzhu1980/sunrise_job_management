@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sunrise_job_management/models/job.dart';
 import 'package:sunrise_job_management/models/task.dart';
 import 'package:sunrise_job_management/widgets/job/job_overview.dart';
+import 'package:sunrise_job_management/widgets/job/job_start.dart';
 
 class JobDetailsPage extends StatefulWidget {
   static const routeName = '/job/details';
@@ -25,10 +26,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
   Widget _widgetOptions(int index) {
     final List<Widget> _widgetOptions = <Widget>[
       JobOverview(scaffoldKey, widget.job, widget.tasks, widget.stages),
-      Text(
-        'Index 1: Business',
-        style: optionStyle,
-      ),
+      JobStart(scaffoldKey, widget.job),
       Text(
         'Index 2: School',
         style: optionStyle,

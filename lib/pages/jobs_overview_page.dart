@@ -212,7 +212,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                     ],
                   ),
                   SizedBox(
-                    height: 40 * job.tasks.length * 1.0,
+                    height: 30 * job.tasks.length * 1.0,
                     width: 250,
                     child: Column(
                       children: <Widget>[
@@ -229,7 +229,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: <Widget>[
                                   Icon(Icons.done),
-                                  Text(tempTask.task)
+                                  Flexible(child: Text(tempTask.task))
                                 ],
                               ),
                             );
