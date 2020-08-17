@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:sunrise_job_management/models/hazard.dart';
 import 'package:sunrise_job_management/models/job.dart';
+import 'package:sunrise_job_management/widgets/public/photo_picker.dart';
 
 class JobStart extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -14,12 +20,11 @@ class JobStart extends StatefulWidget {
 }
 
 class _JobStartState extends State<JobStart> {
+  // Hazard
   bool isHazardsPanelExpanded = false;
-  bool isPhotoPanelExpanded = false;
   Stream _streamHazardData;
   List<dynamic> _selectedHazards = [];
   bool _isHazardLoading = false;
-  bool _isUploadLoading = false;
   bool _isSaveHazardLoading = false;
   final GlobalKey<FormState> _hazardFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _addHazardFormKey = GlobalKey<FormState>();
@@ -30,18 +35,45 @@ class _JobStartState extends State<JobStart> {
     swms: [],
     isActive: true,
   );
+  // Upload
+  bool isPhotoPanelExpanded = false;
+  bool _isUploadLoading = false;
+  final GlobalKey<FormState> _uploadFormKey = GlobalKey<FormState>();
+  File _exteriorImageFile;
+  String _exteriorPhoto = '';
+  List<dynamic> _beforePhotos = ['', ''];
+  var _beforePhotoFiles = Map<int, File>();
 
   @override
   void initState() {
     super.initState();
     _streamHazardData = _getHazards();
     _selectedHazards = widget.jobData.hazards;
+    _exteriorPhoto = widget.jobData.exteriorPhoto;
+    if (widget.jobData.beforePhotos == null) {
+      _beforePhotos = ['', ''];
+    } else {
+      if (widget.jobData.beforePhotos.isNotEmpty) {
+        _beforePhotos = widget.jobData.beforePhotos;
+      } else {
+        _beforePhotos = ['', ''];
+      }
+    }
+    print('beforePhotos: ${widget.jobData.beforePhotos}');
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: _buildPanel(),
+      child: Column(
+        children: [
+          _buildPanel(),
+          SizedBox(
+            height: 15,
+          ),
+          _buildButtons(),
+        ],
+      ),
     );
   }
 
@@ -68,6 +100,56 @@ class _JobStartState extends State<JobStart> {
       ],
     );
   }
+
+/* Buttons start */
+  Widget _buildButtons() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          RaisedButton(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.timer),
+                Text('Start Visit'),
+              ],
+            ),
+            onPressed: _startVisitBtnClick,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            color: Theme.of(context).primaryColor,
+            textColor: Theme.of(context).primaryTextTheme.button.color,
+            elevation: 3,
+          ),
+          RaisedButton(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.calendar_today),
+                Text('Reschedule Visit'),
+              ],
+            ),
+            onPressed: _rescheduleVisitBtnClick,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            color: Colors.amber,
+            elevation: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  _startVisitBtnClick() {
+    print('start');
+    // TODO: check hazards and photos first
+  }
+
+  _rescheduleVisitBtnClick() {
+    print('reschedule');
+  }
+/* Buttons end */
 
 /* Hazard part start */
   ExpansionPanel _buildHazardsExpansionPanel() {
@@ -408,11 +490,324 @@ class _JobStartState extends State<JobStart> {
         );
       },
       canTapOnHeader: true,
-      body: ListTile(
-        title: Text('Upload'),
-        subtitle: Text('Details goes here'),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            child: Text(
+              'Record all 3 photos required below',
+              style: TextStyle(fontSize: 16),
+            ),
+            padding: EdgeInsets.only(left: 10, bottom: 20),
+          ),
+          _buildPhotosForm(),
+        ],
       ),
       isExpanded: isPhotoPanelExpanded,
+    );
+  }
+
+  void _pickedExteriorImage(File image, [int index]) {
+    _exteriorImageFile = image;
+  }
+
+  void _pickedBeforeImage(File image, [int index]) {
+    print('index:$index');
+    // _beforePhotoFiles[index] = image;
+    _beforePhotoFiles[index] = image;
+    _beforePhotos[index] = image.path;
+  }
+
+  void _deleteExteriorPhoto([int index]) {
+    setState(() {
+      _exteriorPhoto = null;
+      _exteriorImageFile = null;
+    });
+    print('_exteriorPhoto: $_exteriorPhoto');
+  }
+
+  void _deleteBeforePhoto([int index]) {
+    print('index: $index');
+    setState(() {
+      if (index != null) {
+        _beforePhotos[index] = '';
+        _beforePhotoFiles[index] = null;
+      }
+    });
+    print('photos: $_beforePhotos');
+  }
+
+  Future<String> _uploadImage(
+      String jobId, String imageType, File imageFile, int imageIndex) async {
+    String _fileExtension = p.extension(imageFile.path);
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child(imageType)
+        .child(jobId + imageType + imageIndex.toString() + _fileExtension);
+    await ref.putFile(imageFile).onComplete;
+    return await ref.getDownloadURL();
+  }
+
+  void _trySavePhotos() async {
+    print('save photo');
+    final isValid = _uploadFormKey.currentState.validate();
+    print('isValid: $isValid');
+    FocusScope.of(context).unfocus();
+
+    if (isValid) {
+      setState(() {
+        _isUploadLoading = true;
+      });
+      _uploadFormKey.currentState.save();
+
+      final _currentUser = await FirebaseAuth.instance.currentUser();
+      // Save photos
+      var _tempUpdateData = {
+        'modifiedBy': _currentUser.uid,
+        'modifiedAt': DateTime.now().toUtc()
+      };
+      if (_exteriorImageFile != null) {
+        var tempExteriorPhotoUrl = await _uploadImage(
+            widget.jobData.id, 'job_exterior_image', _exteriorImageFile, 0);
+        _tempUpdateData['exteriorPhoto'] = tempExteriorPhotoUrl;
+        print('upload exterior finished------------');
+      }
+      if (_beforePhotoFiles.length > 0) {
+        for (MapEntry<int, File> photoFile in _beforePhotoFiles.entries) {
+          var tempUrl = await _uploadImage(widget.jobData.id,
+              'job_before_image', photoFile.value, photoFile.key);
+          _beforePhotos[photoFile.key] = tempUrl;
+        }
+        _tempUpdateData['beforePhotos'] = _beforePhotos;
+        print('upload before finished---------------');
+      }
+
+      try {
+        print('update Data: $_tempUpdateData');
+        await Firestore.instance
+            .collection('jobs')
+            .document(widget.jobData.id)
+            .updateData(_tempUpdateData)
+            .then((_) => {
+                  widget.scaffoldKey.currentState.showSnackBar(
+                    SnackBar(
+                      content: Text('Photos upload success.'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(milliseconds: 2000),
+                    ),
+                  ),
+                  setState(() {
+                    _isUploadLoading = false;
+                  }),
+                });
+      } catch (e) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('An error occurred'),
+            content: Text(e.toString()),
+            actions: [
+              FlatButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildPhotosForm() {
+    return Form(
+      key: _uploadFormKey,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          children: [
+            _buildExteriorPhotoContainer(),
+            _buildBeforePhotoContainers(),
+            _buildSaveBtn(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBeforePhotoContainers() {
+    List<Widget> list = List<Widget>();
+    for (var i = 0; i < _beforePhotos.length; i++) {
+      list.add(_buildBeforePhotoContainer(i, _beforePhotos[i]));
+    }
+    return Column(
+      children: list,
+    );
+  }
+
+  Widget _buildExteriorPhotoContainer() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.grey[300],
+          width: 1.0,
+          style: BorderStyle.solid,
+        ),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              children: [
+                Icon(Icons.photo_camera),
+                SizedBox(
+                  width: 5,
+                ),
+                Text(
+                  'Exterior Photo Only',
+                  style: Theme.of(context).textTheme.headline6,
+                ),
+              ],
+            ),
+          ),
+          FormField(
+            builder: (field) {
+              return Column(
+                children: [
+                  Container(
+                    child: PhotoPicker(_pickedExteriorImage, _exteriorPhoto,
+                        _deleteExteriorPhoto),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      field.errorText ?? '',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).errorColor,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+            validator: (value) {
+              if (_exteriorPhoto == null) {
+                return 'Please select a photo';
+              } else if (_exteriorPhoto.isEmpty) {
+                return 'Please select a photo';
+              } else {
+                return null;
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBeforePhotoContainer(int index, String beforePhoto) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.grey[300],
+          width: 1.0,
+          style: BorderStyle.solid,
+        ),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              children: [
+                Icon(Icons.photo_camera),
+                SizedBox(
+                  width: 5,
+                ),
+                Text(
+                  'Before Photo Only',
+                  style: Theme.of(context).textTheme.headline6,
+                ),
+              ],
+            ),
+          ),
+          FormField(
+            builder: (field) {
+              return Column(
+                children: [
+                  Container(
+                    child: PhotoPicker(_pickedBeforeImage, beforePhoto,
+                        _deleteBeforePhoto, index),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      field.errorText ?? '',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).errorColor,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+            validator: (value) {
+              if (_beforePhotos[index] == null) {
+                return 'Please select a photo';
+              } else if (_beforePhotos[index] == '') {
+                return 'Please select a photo';
+              } else {
+                return null;
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveBtn() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.grey[300],
+          width: 1.0,
+          style: BorderStyle.solid,
+        ),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          if (_isUploadLoading)
+            Center(
+              child: CircularProgressIndicator(),
+            ),
+          if (!_isUploadLoading)
+            RaisedButton(
+              child: Row(
+                // mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.save),
+                  Text('Save Photos'),
+                ],
+              ),
+              onPressed: _trySavePhotos,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
+              color: Theme.of(context).primaryColor,
+              textColor: Theme.of(context).primaryTextTheme.button.color,
+              elevation: 3,
+            ),
+        ],
+      ),
     );
   }
 /* Upload part end */

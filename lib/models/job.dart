@@ -34,6 +34,8 @@ class Job {
   String createdBy;
   String modifiedBy;
   List hazards;
+  String exteriorPhoto;
+  List beforePhotos;
 
   Job({
     this.id,
@@ -66,6 +68,8 @@ class Job {
     this.createdBy,
     this.modifiedBy,
     this.hazards,
+    this.exteriorPhoto,
+    this.beforePhotos,
   });
 
   Map<String, dynamic> toMap() {
@@ -106,6 +110,8 @@ class Job {
       'createdBy': createdBy,
       'modifiedBy': modifiedBy,
       'hazards': hazards,
+      'exteriorPhoto': exteriorPhoto,
+      'beforePhotos': beforePhotos,
     };
     // if (startDate != null) {
     //   returnJob['startDate'] = _getDateTimeDate(startDate.toUtc());
@@ -151,6 +157,8 @@ class Job {
       createdBy: snapshot['createdBy'],
       modifiedBy: snapshot['modifiedBy'],
       hazards: snapshot['hazards'],
+      exteriorPhoto: snapshot['exteriorPhoto'],
+      beforePhotos: snapshot['beforePhotos'],
     );
     if (snapshot['startDateReal'] != null) {
       returnJob.startDateReal =

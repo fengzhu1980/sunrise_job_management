@@ -28,7 +28,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
       JobOverview(scaffoldKey, widget.job, widget.tasks, widget.stages),
       JobStart(scaffoldKey, widget.job),
       Text(
-        'Index 2: School',
+        'Index 2: Quotes',
         style: optionStyle,
       ),
     ];
