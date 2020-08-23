@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:sunrise_job_management/models/job.dart';
+import 'package:sunrise_job_management/models/task.dart';
 import 'package:sunrise_job_management/widgets/public/date_time_picker.dart';
 
 class EditJobPage extends StatefulWidget {
@@ -76,6 +77,10 @@ class _EditJobPageState extends State<EditJobPage> {
         _editJob.createdAt = DateTime.now().toUtc();
         _editJob.createdBy = _currentUser.uid;
         _editJob.isDeleted = false;
+        _editJob.originalStartDate = _editJob.startDate;
+        _editJob.originalEndDate = _editJob.endDate;
+        _editJob.originalStartTime = _editJob.startTime;
+        _editJob.originalEndTime = _editJob.endTime;
         try {
           DocumentReference jobRef =
               Firestore.instance.collection('jobs').document();
@@ -111,6 +116,7 @@ class _EditJobPageState extends State<EditJobPage> {
         });
       } else {
         // Update job
+        // TODO: Check update job hour bug
         oprationType = 'Update';
         _editJob.modifiedAt = DateTime.now().toUtc();
         _editJob.modifiedBy = _currentUser.uid;
@@ -521,6 +527,112 @@ class _EditJobPageState extends State<EditJobPage> {
                         _editJob.note = value;
                       },
                     ),
+                    if (_editJob.isRescheduled)
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(Icons.calendar_today),
+                            Text(
+                              'Reschedule',
+                              style: Theme.of(context).textTheme.headline6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (_editJob.isRescheduled)
+                      TextFormField(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Reschedule Description',
+                        ),
+                        initialValue: _editJob.rescheduleReason,
+                        textCapitalization: TextCapitalization.sentences,
+                        minLines: 3,
+                        maxLines: 4,
+                        onSaved: (value) {
+                          _editJob.rescheduleReason = value;
+                        },
+                      ),
+                    if (_editJob.isRescheduled)
+                      FormField(
+                        builder: (field) {
+                          return StreamBuilder(
+                            stream: Firestore.instance
+                                .collection('tasks')
+                                .snapshots(),
+                            builder: (ctx, tasksSnapshot) {
+                              if (!tasksSnapshot.hasData) {
+                                return Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                              final tasksData = tasksSnapshot.data.documents;
+                              final tempTasks = List<Task>();
+                              tasksData.forEach((task) {
+                                var tempTask = Task.fromSnapshot(task);
+                                tempTasks.add(tempTask);
+                              });
+                              return DataTable(
+                                showCheckboxColumn: true,
+                                columns: <DataColumn>[
+                                  const DataColumn(
+                                    label: Text(
+                                      'Description',
+                                      style: TextStyle(
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                                  ),
+                                  // const DataColumn(
+                                  //   label: Text(
+                                  //     'Hours',
+                                  //     style: TextStyle(fontStyle: FontStyle.italic),
+                                  //   ),
+                                  // ),
+                                  const DataColumn(
+                                    label: Text(
+                                      'Price',
+                                      style: TextStyle(
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                                  ),
+                                ],
+                                rows: _editJob.tasks.map((taskId) {
+                                  final tempTask = tempTasks.firstWhere(
+                                      (element) => element.id == taskId);
+                                  return DataRow(
+                                    key: Key(tempTask.id),
+                                    selected: _editJob.completedTasks
+                                        .contains(tempTask.id),
+                                    onSelectChanged: (value) {
+                                      setState(() {
+                                        if (value) {
+                                          if (!_editJob.completedTasks
+                                              .contains(tempTask.id)) {
+                                            _editJob.completedTasks
+                                                .add(tempTask.id);
+                                          }
+                                        } else {
+                                          if (_editJob.completedTasks
+                                              .contains(tempTask.id)) {
+                                            _editJob.completedTasks
+                                                .remove(tempTask.id);
+                                          }
+                                        }
+                                      });
+                                    },
+                                    cells: <DataCell>[
+                                      DataCell(Text('${tempTask.task}')),
+                                      // DataCell(Text('${tempTask.hours}')),
+                                      DataCell(Text('${tempTask.price}')),
+                                    ],
+                                  );
+                                }).toList(),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     SizedBox(height: 12),
                     if (_isLoading)
                       Center(

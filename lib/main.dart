@@ -8,6 +8,7 @@ import 'package:sunrise_job_management/pages/edit_task_page.dart';
 import 'package:sunrise_job_management/pages/edit_user_page.dart';
 import 'package:sunrise_job_management/pages/hazards_page.dart';
 import 'package:sunrise_job_management/pages/jobs_overview_page.dart';
+import 'package:sunrise_job_management/pages/jobs_reschedule_page.dart';
 import 'package:sunrise_job_management/pages/splash_page.dart';
 import 'package:sunrise_job_management/pages/jobs_page.dart';
 import 'package:sunrise_job_management/pages/edit_job_page.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         JobsPage.routeName: (ctx) => JobsPage(),
+        JobsReschedulePage.routeName: (ctx) => JobsReschedulePage(),
         EditJobPage.routeName: (ctx) => EditJobPage(),
         JobsOverviewPage.routeName: (ctx) => JobsOverviewPage(),
         UsersPage.routeName: (ctx) => UsersPage(),

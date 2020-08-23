@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sunrise_job_management/models/user.dart';
 import 'package:sunrise_job_management/pages/edit_user_page.dart';
 import 'package:sunrise_job_management/pages/hazards_page.dart';
+import 'package:sunrise_job_management/pages/jobs_reschedule_page.dart';
 import 'package:sunrise_job_management/pages/swms_page.dart';
 import 'package:sunrise_job_management/pages/tasks_page.dart';
 import 'package:sunrise_job_management/pages/users_page.dart';
@@ -39,6 +40,14 @@ class AppDrawer extends StatelessWidget {
               title: Text('Job Management'),
               onTap: () {
                 Navigator.of(context).pushNamed(JobsPage.routeName);
+              },
+            ),
+          if (userData.roles.contains('admin'))
+            ListTile(
+              leading: Icon(Icons.message),
+              title: Text('Rescheduled Job Management'),
+              onTap: () {
+                Navigator.of(context).pushNamed(JobsReschedulePage.routeName);
               },
             ),
           if (userData.roles.contains('admin'))

@@ -36,6 +36,14 @@ class Job {
   List hazards;
   String exteriorPhoto;
   List beforePhotos;
+  bool isRescheduled;
+  bool hasBeenReassigned;
+  List completedTasks;
+  String rescheduleReason;
+  DateTime originalStartDate;
+  DateTime originalEndDate;
+  TimeOfDay originalStartTime;
+  TimeOfDay originalEndTime;
 
   Job({
     this.id,
@@ -70,6 +78,14 @@ class Job {
     this.hazards,
     this.exteriorPhoto,
     this.beforePhotos,
+    this.isRescheduled,
+    this.hasBeenReassigned,
+    this.completedTasks,
+    this.rescheduleReason,
+    this.originalStartDate,
+    this.originalEndDate,
+    this.originalStartTime,
+    this.originalEndTime,
   });
 
   Map<String, dynamic> toMap() {
@@ -88,6 +104,8 @@ class Job {
       'endMin': endTime.minute,
       'startDateReal': startDateReal?.toUtc(),
       'endDateReal': endDateReal?.toUtc(),
+      // TODO: delete real start hour and min, end hour and min real properties. and snapshot func as well.
+      // TODO: check utc time
       'startHourReal': startTimeReal?.hour,
       'startMinReal': startTimeReal?.minute,
       'endHourReal': endTimeReal?.hour,
@@ -112,6 +130,16 @@ class Job {
       'hazards': hazards,
       'exteriorPhoto': exteriorPhoto,
       'beforePhotos': beforePhotos,
+      'isRescheduled': isRescheduled,
+      'hasBeenReassigned': hasBeenReassigned,
+      'completedTasks': completedTasks,
+      'rescheduleReason': rescheduleReason,
+      'originalStartDate': originalStartDate,
+      'originalEndDate': originalEndDate,
+      'originalStartHour': originalStartTime.hour,
+      'originalStartMin': originalStartTime.minute,
+      'originalEndHour': originalEndTime.hour,
+      'originalEndMin': originalEndTime.minute,
     };
     // if (startDate != null) {
     //   returnJob['startDate'] = _getDateTimeDate(startDate.toUtc());
@@ -159,6 +187,10 @@ class Job {
       hazards: snapshot['hazards'],
       exteriorPhoto: snapshot['exteriorPhoto'],
       beforePhotos: snapshot['beforePhotos'],
+      isRescheduled: snapshot['isRescheduled'],
+      hasBeenReassigned: snapshot['hasBeenReassigned'],
+      completedTasks: snapshot['completedTasks'],
+      rescheduleReason: snapshot['rescheduleReason'],
     );
     if (snapshot['startDateReal'] != null) {
       returnJob.startDateReal =
@@ -180,6 +212,26 @@ class Job {
     if (snapshot['modifiedAt'] != null) {
       returnJob.modifiedAt =
           DateTime.tryParse(snapshot['modifiedAt'].toString());
+    }
+    if (snapshot['originalStartDate'] != null) {
+      returnJob.originalStartDate =
+          DateTime.tryParse(snapshot['originalStartDate'].toDate().toString());
+    }
+    if (snapshot['originalEndDate'] != null) {
+      returnJob.originalEndDate =
+          DateTime.tryParse(snapshot['originalEndDate'].toDate().toString());
+    }
+    if ((snapshot['originalStartHour'] != null) &&
+        (snapshot['originalStartMin'] != null)) {
+      returnJob.originalStartTime = TimeOfDay(
+          hour: snapshot['originalStartHour'],
+          minute: snapshot['originalStartMin']);
+    }
+    if ((snapshot['originalEndHour'] != null) &&
+        (snapshot['originalEndMin'] != null)) {
+      returnJob.originalEndTime = TimeOfDay(
+          hour: snapshot['originalEndHour'],
+          minute: snapshot['originalEndMin']);
     }
     return returnJob;
   }

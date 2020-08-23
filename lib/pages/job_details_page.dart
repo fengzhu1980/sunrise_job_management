@@ -26,7 +26,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
   Widget _widgetOptions(int index) {
     final List<Widget> _widgetOptions = <Widget>[
       JobOverview(scaffoldKey, widget.job, widget.tasks, widget.stages),
-      JobStart(scaffoldKey, widget.job),
+      JobStart(scaffoldKey, widget.job, widget.tasks),
       Text(
         'Index 2: Quotes',
         style: optionStyle,

@@ -3,17 +3,21 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sunrise_job_management/models/hazard.dart';
 import 'package:sunrise_job_management/models/job.dart';
+import 'package:sunrise_job_management/models/task.dart';
 import 'package:sunrise_job_management/widgets/public/photo_picker.dart';
 
 class JobStart extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final Job jobData;
+  final List<Task> tasks;
 
-  JobStart(this.scaffoldKey, this.jobData);
+  JobStart(this.scaffoldKey, this.jobData, this.tasks);
 
   @override
   _JobStartState createState() => _JobStartState();
@@ -26,8 +30,12 @@ class _JobStartState extends State<JobStart> {
   List<dynamic> _selectedHazards = [];
   bool _isHazardLoading = false;
   bool _isSaveHazardLoading = false;
+  bool _isRescheduleLoading = false;
   final GlobalKey<FormState> _hazardFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _addHazardFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _rescheduleFormKey = GlobalKey<FormState>();
+  String _rescheduleReason = '';
+  List _completedTask = [];
   Hazard _editHazard = Hazard(
     id: null,
     title: '',
@@ -43,6 +51,7 @@ class _JobStartState extends State<JobStart> {
   String _exteriorPhoto = '';
   List<dynamic> _beforePhotos = ['', ''];
   var _beforePhotoFiles = Map<int, File>();
+  // Reschedule
 
   @override
   void initState() {
@@ -58,6 +67,12 @@ class _JobStartState extends State<JobStart> {
       } else {
         _beforePhotos = ['', ''];
       }
+    }
+    if (widget.jobData.rescheduleReason != null) {
+      _rescheduleReason = widget.jobData.rescheduleReason;
+    }
+    if (widget.jobData.completedTasks != null) {
+      _completedTask = List<String>.from(widget.jobData.completedTasks);
     }
     print('beforePhotos: ${widget.jobData.beforePhotos}');
   }
@@ -130,7 +145,7 @@ class _JobStartState extends State<JobStart> {
                 Text('Reschedule Visit'),
               ],
             ),
-            onPressed: _rescheduleVisitBtnClick,
+            onPressed: _showRescheduleDialog,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             color: Colors.amber,
@@ -142,12 +157,312 @@ class _JobStartState extends State<JobStart> {
   }
 
   _startVisitBtnClick() {
-    print('start');
-    // TODO: check hazards and photos first
+    String warningText = '';
+    bool isHazardEmpty = (_selectedHazards == null)
+        ? true
+        : (_selectedHazards.length == 0) ? true : false;
+    bool isPhotoEmpty = false;
+    if (_exteriorPhoto?.isEmpty ?? true) isPhotoEmpty = true;
+    if (_beforePhotos?.length == 0) isPhotoEmpty = true;
+    if (isHazardEmpty && isPhotoEmpty) {
+      warningText = 'Please input hazard and upload photo first.';
+    } else if (isHazardEmpty) {
+      warningText = 'Please input hazard.';
+    } else if (isPhotoEmpty) {
+      warningText = 'Please upload photo';
+    }
+    if (isHazardEmpty || isPhotoEmpty) {
+      widget.scaffoldKey.currentState.showSnackBar(
+        SnackBar(
+          content: Text(warningText),
+          backgroundColor: Colors.amber,
+          duration: Duration(milliseconds: 2000),
+        ),
+      );
+    } else {
+      print('start visit');
+      // TODO: start visit
+    }
   }
 
-  _rescheduleVisitBtnClick() {
-    print('reschedule');
+  Future<void> _showRescheduleDialog() async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(Icons.calendar_today),
+                    Text('Reschedule Visit'),
+                  ],
+                ),
+                content: _buildRescheduleWidget(setState),
+                actions: [
+                  FlatButton(
+                    child: Text('Close'),
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                  ),
+                  if (_isRescheduleLoading)
+                    Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  if (!_isRescheduleLoading)
+                    RaisedButton(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.calendar_today),
+                          Text('Reschedule')
+                        ],
+                      ),
+                      onPressed: () => _trySaveReschedule(setState),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      color: Theme.of(context).primaryColor,
+                      textColor:
+                          Theme.of(context).primaryTextTheme.button.color,
+                      elevation: 3,
+                    ),
+                ],
+              );
+            },
+          );
+        });
+  }
+
+  Widget _buildRescheduleWidget(StateSetter setState) {
+    final tempDate = DateFormat('EEEE d MMMM').format(widget.jobData.startDate);
+    final tempStartTime = widget.jobData.startTime.format(context);
+    final tempEndTime = widget.jobData.endTime.format(context);
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).requestFocus(FocusNode());
+      },
+      child: Container(
+        height: MediaQuery.of(context).size.height,
+        width: double.infinity,
+        child: Form(
+          key: _rescheduleFormKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.jobData.isRescheduled != null)
+                  if (widget.jobData.isRescheduled)
+                    Chip(
+                      backgroundColor: Colors.amber,
+                      avatar: CircleAvatar(
+                        backgroundColor: Colors.grey.shade800,
+                        child: Text('R'),
+                      ),
+                      label: Text('Reschedule Success'),
+                    ),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                      'You are about to request a reschedule of the visit at $tempDate $tempStartTime to $tempEndTime.'),
+                ),
+                Text(
+                  'Please provide a reason below why this visit is being rescheduled. Please provide the following information on the reschedule:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17.0),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.looks_one),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Flexible(
+                            child: Text('Has the contact been notified?'),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.looks_two),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Flexible(
+                            child: Text('Has a new time been agreed?'),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.looks_3),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Flexible(
+                            child:
+                                Text('What is the reason for the reschedule?'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                TextFormField(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.words,
+                  initialValue: _rescheduleReason,
+                  minLines: 5,
+                  maxLines: 6,
+                  validator: _generalValidator,
+                  onSaved: (value) {
+                    _rescheduleReason = value;
+                  },
+                ),
+                DataTable(
+                  showCheckboxColumn: true,
+                  columns: <DataColumn>[
+                    const DataColumn(
+                      label: Text(
+                        'Description',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                    // const DataColumn(
+                    //   label: Text(
+                    //     'Hours',
+                    //     style: TextStyle(fontStyle: FontStyle.italic),
+                    //   ),
+                    // ),
+                    const DataColumn(
+                      label: Text(
+                        'Price',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
+                  rows: widget.jobData.tasks.map((taskId) {
+                    final tempTask = widget.tasks
+                        .firstWhere((element) => element.id == taskId);
+                    return DataRow(
+                      key: Key(tempTask.id),
+                      selected: _completedTask.contains(tempTask.id),
+                      onSelectChanged: (value) {
+                        setState(() {
+                          if (value) {
+                            if (!_completedTask.contains(tempTask.id)) {
+                              _completedTask.add(tempTask.id);
+                            }
+                          } else {
+                            if (_completedTask.contains(tempTask.id)) {
+                              _completedTask.remove(tempTask.id);
+                            }
+                          }
+                        });
+                      },
+                      cells: <DataCell>[
+                        DataCell(Text('${tempTask.task}')),
+                        // DataCell(Text('${tempTask.hours}')),
+                        DataCell(Text('${tempTask.price}')),
+                      ],
+                    );
+                  }).toList(),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 5.0),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  _trySaveReschedule(StateSetter setState) async {
+    final isValid = _rescheduleFormKey.currentState.validate();
+    FocusScope.of(context).unfocus();
+
+    if (isValid) {
+      setState(() {
+        _isRescheduleLoading = true;
+      });
+      _rescheduleFormKey.currentState.save();
+
+      if ((widget.jobData.rescheduleReason != _rescheduleReason) ||
+          !listEquals(widget.jobData.completedTasks, _completedTask)) {
+        // Update job data
+        var tempUpdateData = {
+          'rescheduleReason': _rescheduleReason,
+          'completedTasks': _completedTask,
+          'isRescheduled': true,
+          'hasBeenReassigned': false,
+          'modifiedAt': DateTime.now().toUtc()
+        };
+
+        try {
+          print('update Data: $tempUpdateData');
+          await Firestore.instance
+              .collection('jobs')
+              .document(widget.jobData.id)
+              .updateData(tempUpdateData)
+              .then((_) async {
+            await showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Success'),
+                content: Text('Job rescheduled successfully'),
+                actions: [
+                  FlatButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  )
+                ],
+              ),
+            );
+            // widget.scaffoldKey.currentState.showSnackBar(
+            //   SnackBar(
+            //     content: Text('Job rescheduled successfully.'),
+            //     backgroundColor: Colors.green,
+            //     duration: Duration(milliseconds: 2000),
+            //   ),
+            // ),
+            setState(() {
+              _isRescheduleLoading = false;
+            });
+          });
+        } catch (e) {
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('An error occurred'),
+              content: Text(e.toString()),
+              actions: [
+                FlatButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            ),
+          );
+          setState(() {
+            _isRescheduleLoading = false;
+          });
+        }
+      }
+    }
   }
 /* Buttons end */
 
@@ -220,7 +535,9 @@ class _JobStartState extends State<JobStart> {
                 );
               },
               validator: (value) {
-                if (_selectedHazards.length == 0) {
+                if (_selectedHazards == null) {
+                  return 'Please select task';
+                } else if (_selectedHazards.length == 0) {
                   return 'Please select task';
                 } else {
                   return null;
@@ -334,7 +651,7 @@ class _JobStartState extends State<JobStart> {
     }
   }
 
-  // TODO
+  // TODO:
   void _trySaveNewHazard() async {
     print('save new');
   }
