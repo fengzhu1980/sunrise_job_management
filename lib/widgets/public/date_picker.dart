@@ -19,33 +19,32 @@ class DatePicker extends StatelessWidget {
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101)
-    );
-    if (picked != null && picked != selectedDate)
-      selectDate(picked);
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(2015, 8),
+        lastDate: DateTime(2101));
+    if (picked != null && picked != selectedDate) selectDate(picked);
   }
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle valueStyle = Theme.of(context).textTheme.title;
+    final TextStyle valueStyle = Theme.of(context).textTheme.headline6;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.0),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            // flex: 4,
-            child: InputDropdown(
-              labelText: labelText,
-              valueText: DateFormat.yMMMd().format(selectedDate),
-              valueStyle: valueStyle,
-              onPressed: () { _selectDate(context); },
+        padding: EdgeInsets.symmetric(horizontal: 10.0),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              flex: 4,
+              child: InputDropdown(
+                labelText: labelText,
+                valueText: DateFormat.yMMMd().format(selectedDate),
+                valueStyle: valueStyle,
+                onPressed: () {
+                  _selectDate(context);
+                },
+              ),
             ),
-          ),
-        ],
-      )
-    );
+          ],
+        ));
   }
 }

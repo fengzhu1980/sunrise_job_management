@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 import 'package:sunrise_job_management/models/job.dart';
 import 'package:sunrise_job_management/models/task.dart';
@@ -40,6 +41,9 @@ class _EditJobPageState extends State<EditJobPage> {
   var _appBarTitle = 'Create new job';
   final GlobalKey<FormState> _jobFormKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  String _originalStartDate = '';
+  String _originalStartTime = '';
+  String _originalEndTime = '';
 
   Future _jobCode;
   Future _getJobCode() async {
@@ -57,6 +61,20 @@ class _EditJobPageState extends State<EditJobPage> {
       _editJob = Job.fromSnapshot(widget.jobData);
     }
     _jobCode = _getJobCode();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print('_isRescheduled: ${_editJob.isRescheduled}');
+    if (_editJob.isRescheduled != null) {
+      if (_editJob.isRescheduled) {
+        _originalStartDate =
+            DateFormat('EEEE d MMMM').format(_editJob.originalStartDate);
+        _originalStartTime = _editJob.originalStartTime.format(context);
+        _originalEndTime = _editJob.originalEndTime.format(context);
+      }
+    }
   }
 
   void _trySubmit() async {
@@ -81,6 +99,9 @@ class _EditJobPageState extends State<EditJobPage> {
         _editJob.originalEndDate = _editJob.endDate;
         _editJob.originalStartTime = _editJob.startTime;
         _editJob.originalEndTime = _editJob.endTime;
+        _editJob.isCompleted = false;
+        _editJob.isDeleted = false;
+        _editJob.isRescheduled = false;
         try {
           DocumentReference jobRef =
               Firestore.instance.collection('jobs').document();
@@ -527,7 +548,8 @@ class _EditJobPageState extends State<EditJobPage> {
                         _editJob.note = value;
                       },
                     ),
-                    if (_editJob.isRescheduled)
+                    if (_editJob.isRescheduled != null &&
+                        _editJob.isRescheduled)
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 20),
                         child: Row(
@@ -540,7 +562,8 @@ class _EditJobPageState extends State<EditJobPage> {
                           ],
                         ),
                       ),
-                    if (_editJob.isRescheduled)
+                    if (_editJob.isRescheduled != null &&
+                        _editJob.isRescheduled)
                       TextFormField(
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
@@ -554,7 +577,8 @@ class _EditJobPageState extends State<EditJobPage> {
                           _editJob.rescheduleReason = value;
                         },
                       ),
-                    if (_editJob.isRescheduled)
+                    if (_editJob.isRescheduled != null &&
+                        _editJob.isRescheduled)
                       FormField(
                         builder: (field) {
                           return StreamBuilder(
@@ -632,6 +656,30 @@ class _EditJobPageState extends State<EditJobPage> {
                             },
                           );
                         },
+                      ),
+                    if (_editJob.isRescheduled != null &&
+                        _editJob.isRescheduled)
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(Icons.date_range),
+                            Text(
+                              'Original Scheduled',
+                              style: Theme.of(context).textTheme.headline6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (_editJob.isRescheduled != null &&
+                        _editJob.isRescheduled)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          'Original scheduled time: $_originalStartDate $_originalStartTime to $_originalEndTime.',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 17.0),
+                        ),
                       ),
                     SizedBox(height: 12),
                     if (_isLoading)

@@ -182,6 +182,9 @@ class _JobStartState extends State<JobStart> {
     } else {
       print('start visit');
       // TODO: start visit
+      // 1. save start real date and time
+      // 2. save is started, check is end
+      // 3. disable button
     }
   }
 
@@ -418,6 +421,11 @@ class _JobStartState extends State<JobStart> {
             await showDialog(
               context: context,
               builder: (context) => AlertDialog(
+                titleTextStyle: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20.0,
+                ),
                 title: Text('Success'),
                 content: Text('Job rescheduled successfully'),
                 actions: [

@@ -44,6 +44,7 @@ class Job {
   DateTime originalEndDate;
   TimeOfDay originalStartTime;
   TimeOfDay originalEndTime;
+  bool isCompleted;
 
   Job({
     this.id,
@@ -86,6 +87,7 @@ class Job {
     this.originalEndDate,
     this.originalStartTime,
     this.originalEndTime,
+    this.isCompleted,
   });
 
   Map<String, dynamic> toMap() {
@@ -140,6 +142,7 @@ class Job {
       'originalStartMin': originalStartTime.minute,
       'originalEndHour': originalEndTime.hour,
       'originalEndMin': originalEndTime.minute,
+      'isCompleted': isCompleted,
     };
     // if (startDate != null) {
     //   returnJob['startDate'] = _getDateTimeDate(startDate.toUtc());
@@ -191,6 +194,7 @@ class Job {
       hasBeenReassigned: snapshot['hasBeenReassigned'],
       completedTasks: snapshot['completedTasks'],
       rescheduleReason: snapshot['rescheduleReason'],
+      isCompleted: snapshot['isCompleted'],
     );
     if (snapshot['startDateReal'] != null) {
       returnJob.startDateReal =

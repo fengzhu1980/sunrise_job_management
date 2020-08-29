@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sunrise_job_management/models/job.dart';
 import 'package:sunrise_job_management/models/task.dart';
+import 'package:sunrise_job_management/widgets/job/job_end.dart';
 import 'package:sunrise_job_management/widgets/job/job_overview.dart';
 import 'package:sunrise_job_management/widgets/job/job_start.dart';
 
@@ -27,10 +28,7 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
     final List<Widget> _widgetOptions = <Widget>[
       JobOverview(scaffoldKey, widget.job, widget.tasks, widget.stages),
       JobStart(scaffoldKey, widget.job, widget.tasks),
-      Text(
-        'Index 2: Quotes',
-        style: optionStyle,
-      ),
+      JobEnd(scaffoldKey, widget.job),
     ];
 
     return _widgetOptions[index];
@@ -69,8 +67,8 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
             title: Text('Start'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            title: Text('Quotes'),
+            icon: Icon(Icons.offline_bolt),
+            title: Text('End'),
           ),
         ],
         currentIndex: _selectedIndex,
