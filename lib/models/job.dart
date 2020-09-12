@@ -117,8 +117,8 @@ class Job {
       // 'startTime': DateFormat.jm().parse(startTime.toString()).toString(),
       // 'endTime': DateFormat.jm().parse(endTime.toString()).toString(),
       // 'endTime': DateFormat.jm().parse(endTime.toString()).toString(),
-      'createdAt': createdAt,
-      'modifiedAt': modifiedAt,
+      'createdAt': createdAt?.toUtc(),
+      'modifiedAt': modifiedAt?.toUtc(),
       'tasks': tasks,
       'customerName': customerName,
       'customerEmail': customerEmail,
@@ -136,8 +136,8 @@ class Job {
       'hasBeenReassigned': hasBeenReassigned,
       'completedTasks': completedTasks,
       'rescheduleReason': rescheduleReason,
-      'originalStartDate': originalStartDate,
-      'originalEndDate': originalEndDate,
+      'originalStartDate': originalStartDate?.toUtc(),
+      'originalEndDate': originalEndDate?.toUtc(),
       'originalStartHour': originalStartTime.hour,
       'originalStartMin': originalStartTime.minute,
       'originalEndHour': originalEndTime.hour,
@@ -166,8 +166,10 @@ class Job {
       title: snapshot['title'],
       address: snapshot['address'],
       stage: snapshot['stage'],
-      startDate: DateTime.tryParse(snapshot['startDate'].toDate().toString()),
-      endDate: DateTime.tryParse(snapshot['endDate'].toDate().toString()),
+      startDate: DateTime.tryParse(snapshot['startDate'].toDate().toString())
+          .toLocal(),
+      endDate:
+          DateTime.tryParse(snapshot['endDate'].toDate().toString()).toLocal(),
       startTime:
           TimeOfDay(hour: snapshot['startHour'], minute: snapshot['startMin']),
       endTime: TimeOfDay(hour: snapshot['endHour'], minute: snapshot['endMin']),
@@ -175,7 +177,8 @@ class Job {
       // endDateReal: DateTime.tryParse(snapshot['endDateReal']?.toString()),
       // startTimeReal: TimeOfDay(hour: snapshot['startHourReal'], minute: snapshot['startMinReal']),
       // endTimeReal: TimeOfDay(hour: snapshot['endHourReal'], minute: snapshot['endMinReal']),
-      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString()),
+      createdAt: DateTime.tryParse(snapshot['createdAt'].toDate().toString())
+          .toLocal(),
       // modifiedAt: DateTime.tryParse(snapshot['modifiedAt']?.toString()),
       tasks: List.from(snapshot['tasks']),
       customerName: snapshot['customerName'],
@@ -198,11 +201,13 @@ class Job {
     );
     if (snapshot['startDateReal'] != null) {
       returnJob.startDateReal =
-          DateTime.tryParse(snapshot['startDateReal'].toDate().toString());
+          DateTime.tryParse(snapshot['startDateReal'].toDate().toString())
+              .toLocal();
     }
     if (snapshot['endDateReal'] != null) {
       returnJob.endDateReal =
-          DateTime.tryParse(snapshot['endDateReal'].toDate().toString());
+          DateTime.tryParse(snapshot['endDateReal'].toDate().toString())
+              .toLocal();
     }
     if ((snapshot['startHourReal'] != null) &&
         (snapshot['startMinReal'] != null)) {
@@ -214,16 +219,20 @@ class Job {
           hour: snapshot['endHourReal'], minute: snapshot['endMinReal']);
     }
     if (snapshot['modifiedAt'] != null) {
+      print('snapshot: ${snapshot['modifiedAt']}');
       returnJob.modifiedAt =
-          DateTime.tryParse(snapshot['modifiedAt'].toString());
+          DateTime.tryParse(snapshot['modifiedAt'].toDate().toString())
+              .toLocal();
     }
     if (snapshot['originalStartDate'] != null) {
       returnJob.originalStartDate =
-          DateTime.tryParse(snapshot['originalStartDate'].toDate().toString());
+          DateTime.tryParse(snapshot['originalStartDate'].toDate().toString())
+              .toLocal();
     }
     if (snapshot['originalEndDate'] != null) {
       returnJob.originalEndDate =
-          DateTime.tryParse(snapshot['originalEndDate'].toDate().toString());
+          DateTime.tryParse(snapshot['originalEndDate'].toDate().toString())
+              .toLocal();
     }
     if ((snapshot['originalStartHour'] != null) &&
         (snapshot['originalStartMin'] != null)) {

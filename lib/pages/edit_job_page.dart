@@ -92,7 +92,7 @@ class _EditJobPageState extends State<EditJobPage> {
       var _isSuccess = false;
       if (_editJob.id == null) {
         // Add job
-        _editJob.createdAt = DateTime.now().toUtc();
+        _editJob.createdAt = DateTime.now();
         _editJob.createdBy = _currentUser.uid;
         _editJob.isDeleted = false;
         _editJob.originalStartDate = _editJob.startDate;
@@ -139,7 +139,7 @@ class _EditJobPageState extends State<EditJobPage> {
         // Update job
         // TODO: Check update job hour bug
         oprationType = 'Update';
-        _editJob.modifiedAt = DateTime.now().toUtc();
+        _editJob.modifiedAt = DateTime.now();
         _editJob.modifiedBy = _currentUser.uid;
 
         await Firestore.instance

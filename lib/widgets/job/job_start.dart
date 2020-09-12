@@ -56,8 +56,11 @@ class _JobStartState extends State<JobStart> {
   @override
   void initState() {
     super.initState();
+    print('init-------------------------');
     _streamHazardData = _getHazards();
-    _selectedHazards = widget.jobData.hazards;
+    if (widget.jobData.hazards != null) {
+      _selectedHazards = widget.jobData.hazards;
+    }
     _exteriorPhoto = widget.jobData.exteriorPhoto;
     if (widget.jobData.beforePhotos == null) {
       _beforePhotos = ['', ''];
@@ -580,24 +583,24 @@ class _JobStartState extends State<JobStart> {
                           Theme.of(context).primaryTextTheme.button.color,
                       elevation: 3,
                     ),
-                    RaisedButton(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add),
-                          Text('Add Custom Hazard'),
-                        ],
-                      ),
-                      onPressed: _showAddHazardDialog,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      color: Colors.grey[700],
-                      textColor:
-                          Theme.of(context).primaryTextTheme.button.color,
-                      elevation: 3,
-                    ),
+                    // RaisedButton(
+                    //   child: Row(
+                    //     mainAxisSize: MainAxisSize.min,
+                    //     mainAxisAlignment: MainAxisAlignment.center,
+                    //     children: [
+                    //       Icon(Icons.add),
+                    //       Text('Add Custom Hazard'),
+                    //     ],
+                    //   ),
+                    //   onPressed: _showAddHazardDialog,
+                    //   shape: RoundedRectangleBorder(
+                    //     borderRadius: BorderRadius.circular(5),
+                    //   ),
+                    //   color: Colors.grey[700],
+                    //   textColor:
+                    //       Theme.of(context).primaryTextTheme.button.color,
+                    //   elevation: 3,
+                    // ),
                   ],
                 ),
               )
@@ -945,6 +948,16 @@ class _JobStartState extends State<JobStart> {
     }
   }
 
+  // void _refreshJobData() async {
+  //   var tempJobData = await Firestore.instance
+  //       .collection('jobs')
+  //       .document(widget.jobData.id)
+  //       .get();
+  //   setState(() {
+  //     widget.jobData = Job.fromSnapshot(tempJobData);
+  //   });
+  // }
+
   Widget _buildPhotosForm() {
     return Form(
       key: _uploadFormKey,
@@ -1020,9 +1033,8 @@ class _JobStartState extends State<JobStart> {
               );
             },
             validator: (value) {
-              if (_exteriorPhoto == null) {
-                return 'Please select a photo';
-              } else if (_exteriorPhoto.isEmpty) {
+              if ((_exteriorPhoto?.isEmpty ?? true) &&
+                  _exteriorImageFile == null) {
                 return 'Please select a photo';
               } else {
                 return null;

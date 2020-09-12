@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sunrise_job_management/models/job.dart';
@@ -34,6 +33,8 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
   Stream _streamUserData;
   List<Task> _tasks;
   Map<String, String> _stages;
+  int _todayJobs = 0;
+  int _tomorrowJobs = 0;
 
   Stream _getUser() {
     return Firestore.instance
@@ -63,6 +64,17 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     });
   }
 
+  String _getGreetingTxt() {
+    var hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning ';
+    }
+    if (hour < 17) {
+      return 'Good Afternoon ';
+    }
+    return 'Good Evening ';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +87,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     _streamUserData = _getUser();
     _getTasks();
     _getStages();
+    _getTodayAndTomorrowJobs();
 
     // DateTime _tempMonday =
     //     DateTime.now().subtract(Duration(days: DateTime.monday));
@@ -134,8 +147,10 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
 
   void _onDaySelected(DateTime day, List events) {
     print('CALLBACK: _onDaySelected');
+    print('selected day: $day');
     setState(() {
       _selectedDay = _getDateTimeDate(day);
+      print('_selectedDay:$_selectedDay');
       // _selectedEvents = events;
     });
   }
@@ -152,12 +167,36 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     _getEventsByDateTime(first, last);
   }
 
+  void _getTodayAndTomorrowJobs() async {
+    var dateNow = DateTime.now();
+    var dateTomorrow = DateTime(dateNow.year, dateNow.month, dateNow.day + 1);
+    var tempTodayJobDocuments = await Firestore.instance
+        .collection('jobs')
+        .where('userId', isEqualTo: widget.userId)
+        .where('startDate',
+            isGreaterThanOrEqualTo: _getDateTimeDate(dateNow).toUtc())
+        .where('startDate', isLessThan: _getNextMidnight(dateNow).toUtc())
+        .getDocuments();
+    _todayJobs = tempTodayJobDocuments.documents.length;
+    print('_todayJobs: $_todayJobs');
+    var tempTomorrowJobDocuments = await Firestore.instance
+        .collection('jobs')
+        .where('userId', isEqualTo: widget.userId)
+        .where('startDate',
+            isGreaterThanOrEqualTo: _getDateTimeDate(dateTomorrow).toUtc())
+        .where('startDate', isLessThan: _getNextMidnight(dateTomorrow).toUtc())
+        .getDocuments();
+    _tomorrowJobs = tempTomorrowJobDocuments.documents.length;
+    print('_tomorrowJobs: $_tomorrowJobs');
+  }
+
   void _getEventsByDateTime(DateTime first, DateTime last) async {
     var tempJobDocuments = await Firestore.instance
         .collection('jobs')
         .where('userId', isEqualTo: widget.userId)
-        .where('startDate', isGreaterThanOrEqualTo: first)
-        .where('startDate', isLessThanOrEqualTo: last)
+        .where('startDate',
+            isGreaterThanOrEqualTo: _getDateTimeDate(first).toUtc())
+        .where('startDate', isLessThanOrEqualTo: _getDateTimeDate(last).toUtc())
         .getDocuments();
 
     var tempJobs = tempJobDocuments.documents;
@@ -165,6 +204,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     tempJobs.forEach((tempJob) {
       var job = Job.fromSnapshot(tempJob);
       var tempDay = _getDateTimeDate(job.startDate);
+      print('tempDay: $tempDay');
       if (tempEvents.containsKey(tempDay)) {
         tempEvents[tempDay].add(job.title);
       } else {
@@ -173,6 +213,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
     });
     setState(() {
       _events = tempEvents;
+      print('events: $_events');
     });
   }
 
@@ -357,7 +398,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                               ),
                               Flexible(
                                 child: Text(
-                                  'Good Afternoon Admin',
+                                  _getGreetingTxt() + _userData.username,
                                   style: TextStyle(
                                     fontSize: 25,
                                     fontWeight: FontWeight.w600,
@@ -381,7 +422,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                                   width: 5,
                                 ),
                                 Text(
-                                  '0',
+                                  _todayJobs.toString(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 25,
@@ -420,7 +461,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                                   width: 5,
                                 ),
                                 Text(
-                                  '0',
+                                  _tomorrowJobs.toString(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 25,
@@ -697,8 +738,9 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
       stream: Firestore.instance
           .collection('jobs')
           .where('userId', isEqualTo: userId)
-          .where('startDate', isGreaterThanOrEqualTo: _selectedDay)
-          .where('startDate', isLessThan: _getNextMidnight(_selectedDay))
+          .where('startDate', isGreaterThanOrEqualTo: _selectedDay.toUtc())
+          .where('startDate',
+              isLessThan: _getNextMidnight(_selectedDay).toUtc())
           .snapshots(),
       builder: (ctx, jobsSnapshot) {
         if (jobsSnapshot.connectionState == ConnectionState.waiting) {
@@ -751,7 +793,7 @@ class _JobsOverviewPageState extends State<JobsOverviewPage>
                       horizontal: 8.0, vertical: 4.0),
                   child: ListTile(
                     title: Text(
-                        '${DateFormat('dd-MM-yyyy').format(jobData.startDate.toLocal())} - ${jobData.startTime.format(context)}'),
+                        '${DateFormat('dd-MM-yyyy').format(jobData.startDate)} - ${jobData.startTime.format(context)}'),
                     subtitle: Text(jobData.title),
                     onTap: () => _showJobDialog(jobData),
                   ),
